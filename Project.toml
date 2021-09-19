@@ -2,3 +2,7 @@ name = "ExtendedDates"
 uuid = "78f5a1cc-aa73-4dda-b6b2-4d6b1976988f"
 authors = ["MichelJuillard <michel.juillard@mjui.fr>"]
 version = "0.1.0"
+
+[deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
