@@ -11,4 +11,3 @@ struct Undated <: Dates.DatePeriod
 end
 value(d::Semester) = d.value
 value(d::Undated) = d.value
-

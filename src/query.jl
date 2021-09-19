@@ -7,19 +7,19 @@ struct DateLocale
     months_abbr::Vector{String}
     days_of_week::Vector{String}
     days_of_week_abbr::Vector{String}
-    month_value::Dict{String, Int64}
-    month_abbr_value::Dict{String, Int64}
-    day_of_week_value::Dict{String, Int64}
-    day_of_week_abbr_value::Dict{String, Int64}
+    month_value::Dict{String,Int64}
+    month_abbr_value::Dict{String,Int64}
+    day_of_week_value::Dict{String,Int64}
+    day_of_week_abbr_value::Dict{String,Int64}
 end
 
 function locale_dict(names::Vector{<:AbstractString})
-    result = Dict{String, Int}()
+    result = Dict{String,Int}()
 
     # Keep both the common case-sensitive version of the name and an all lowercase
     # version for case-insensitive matches. Storing both allows us to avoid using the
     # lowercase function during parsing.
-    for i in 1:length(names)
+    for i = 1:length(names)
         name = names[i]
         result[name] = i
         result[lowercase(name)] = i
@@ -43,25 +43,45 @@ Arguments:
 This object is passed as the last argument to `tryparsenext` and `format`
 methods defined for each `AbstractDateToken` type.
 """
-function DateLocale(months::Vector, months_abbr::Vector,
-                    days_of_week::Vector, days_of_week_abbr::Vector)
+function DateLocale(
+    months::Vector,
+    months_abbr::Vector,
+    days_of_week::Vector,
+    days_of_week_abbr::Vector,
+)
     DateLocale(
-        months, months_abbr, days_of_week, days_of_week_abbr,
-        locale_dict(months), locale_dict(months_abbr),
-        locale_dict(days_of_week), locale_dict(days_of_week_abbr),
+        months,
+        months_abbr,
+        days_of_week,
+        days_of_week_abbr,
+        locale_dict(months),
+        locale_dict(months_abbr),
+        locale_dict(days_of_week),
+        locale_dict(days_of_week_abbr),
     )
 end
 
 const ENGLISH = DateLocale(
-    ["January", "February", "March", "April", "May", "June",
-     "July", "August", "September", "October", "November", "December"],
-    ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ],
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 )
 
-const LOCALES = Dict{String, DateLocale}("english" => ENGLISH)
+const LOCALES = Dict{String,DateLocale}("english" => ENGLISH)
 
 for (fn, field) in zip(
     [:dayname_to_value, :dayabbr_to_value, :monthname_to_value, :monthabbr_to_value],
@@ -122,7 +142,15 @@ dayofweek(dt::DayDate) = dayofweek(days(dt))
 
 const Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday = 1, 2, 3, 4, 5, 6, 7
 const Mon, Tue, Wed, Thu, Fri, Sat, Sun = 1, 2, 3, 4, 5, 6, 7
-for (ii, day_ind, short_day, long_day) in ((1, "first", :Mon, :Monday), (2, "second", :Tue, :Tuesday), (3, "third", :Wed, :Wednesday), (4, "fourth", :Thu, :Thursday), (5, "fifth", :Fri, :Friday), (6, "sixth", :Sat, :Saturday), (7, "seventh", :Sun, :Sunday))
+for (ii, day_ind, short_day, long_day) in (
+    (1, "first", :Mon, :Monday),
+    (2, "second", :Tue, :Tuesday),
+    (3, "third", :Wed, :Wednesday),
+    (4, "fourth", :Thu, :Thursday),
+    (5, "fifth", :Fri, :Friday),
+    (6, "sixth", :Sat, :Saturday),
+    (7, "seventh", :Sun, :Sunday),
+)
     short_name = string(short_day)
     long_name = string(long_day)
     name_ind = day_ind
@@ -143,12 +171,12 @@ for (ii, day_ind, short_day, long_day) in ((1, "first", :Mon, :Monday), (2, "sec
         $($ind_str)
         ```
         """ ($long_day, $short_day)
-   end
+    end
 end
 dayname(day::Integer, locale::DateLocale) = locale.days_of_week[day]
 dayabbr(day::Integer, locale::DateLocale) = locale.days_of_week_abbr[day]
-dayname(day::Integer; locale::AbstractString="english") = dayname(day, LOCALES[locale])
-dayabbr(day::Integer; locale::AbstractString="english") = dayabbr(day, LOCALES[locale])
+dayname(day::Integer; locale::AbstractString = "english") = dayname(day, LOCALES[locale])
+dayabbr(day::Integer; locale::AbstractString = "english") = dayabbr(day, LOCALES[locale])
 
 """
     dayname(dt::TimeType; locale="english") -> String
@@ -166,8 +194,8 @@ julia> Dates.dayname(4)
 "Thursday"
 ```
 """
-function dayname(dt::Dates.TimeType;locale::AbstractString="english")
-    dayname(dayofweek(dt); locale=locale)
+function dayname(dt::Dates.TimeType; locale::AbstractString = "english")
+    dayname(dayofweek(dt); locale = locale)
 end
 
 """
@@ -186,8 +214,8 @@ julia> Dates.dayabbr(3)
 "Wed"
 ```
 """
-function dayabbr(dt::Dates.TimeType;locale::AbstractString="english")
-    dayabbr(dayofweek(dt); locale=locale)
+function dayabbr(dt::Dates.TimeType; locale::AbstractString = "english")
+    dayabbr(dayofweek(dt); locale = locale)
 end
 
 # Convenience methods for each day
@@ -250,9 +278,9 @@ julia> Dates.daysofweekinmonth(Date("2005-01-04"))
 function daysofweekinmonth(dt::Dates.TimeType)
     y, m, d = yearmonthday(dt)
     ld = daysinmonth(y, m)
-    return ld == 28 ? 4 : ld == 29 ? ((d in TWENTYNINE) ? 5 : 4) :
-           ld == 30 ? ((d in THIRTY) ? 5 : 4) :
-           (d in THIRTYONE) ? 5 : 4
+    return ld == 28 ? 4 :
+           ld == 29 ? ((d in TWENTYNINE) ? 5 : 4) :
+           ld == 30 ? ((d in THIRTY) ? 5 : 4) : (d in THIRTYONE) ? 5 : 4
 end
 
 ### Months
@@ -554,4 +582,3 @@ julia> Dec
 ```
 """
 const Dec = 12
-

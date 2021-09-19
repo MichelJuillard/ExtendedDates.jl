@@ -19,7 +19,8 @@ include(joinpath(BASE_TEST_PATH, "testhelpers", "withlocales.jl"))
     @test string(Dates.Date(-1000000, 1, 1)) == "-1000000-01-01"
     @test string(Dates.Date(1000000, 1, 1)) == "1000000-01-01"
     @test string(Dates.DateTime(2000, 1, 1, 0, 0, 0, 1)) == "2000-01-01T00:00:00.001"
-    @test sprint(show, Dates.DateTime(2000, 1, 1, 0, 0, 0, 1)) == "Dates.DateTime(\"2000-01-01T00:00:00.001\")"
+    @test sprint(show, Dates.DateTime(2000, 1, 1, 0, 0, 0, 1)) ==
+          "Dates.DateTime(\"2000-01-01T00:00:00.001\")"
     @test string(Dates.DateTime(2000, 1, 1, 0, 0, 0, 2)) == "2000-01-01T00:00:00.002"
     @test string(Dates.DateTime(2000, 1, 1, 0, 0, 0, 500)) == "2000-01-01T00:00:00.500"
     @test string(Dates.DateTime(2000, 1, 1, 0, 0, 0, 998)) == "2000-01-01T00:00:00.998"
@@ -33,8 +34,10 @@ end
         Dates.Time(0, 1, 2) => ("00:01:02", "Dates.Time(0, 1, 2)"),
         Dates.Time(0, 1, 2, 3) => ("00:01:02.003", "Dates.Time(0, 1, 2, 3)"),
         Dates.Time(0, 1, 2, 3, 4) => ("00:01:02.003004", "Dates.Time(0, 1, 2, 3, 4)"),
-        Dates.Time(0, 1, 2, 3, 4, 5) => ("00:01:02.003004005", "Dates.Time(0, 1, 2, 3, 4, 5)"),
-        Dates.Time(0, 0, 0, 0, 0, 1) => ("00:00:00.000000001", "Dates.Time(0, 0, 0, 0, 0, 1)"),
+        Dates.Time(0, 1, 2, 3, 4, 5) =>
+            ("00:01:02.003004005", "Dates.Time(0, 1, 2, 3, 4, 5)"),
+        Dates.Time(0, 0, 0, 0, 0, 1) =>
+            ("00:00:00.000000001", "Dates.Time(0, 0, 0, 0, 0, 1)"),
         Dates.Time(0, 0, 0, 1) => ("00:00:00.001", "Dates.Time(0, 0, 0, 1)"),
     ]
 
@@ -53,14 +56,19 @@ end
     str = "02/15/1996 25:00"
     df = Dates.DateFormat("mm/dd/yyyy HH:MM")
     parsed = Any[
-        Dates.Month(2), Dates.Day(15), Dates.Year(1996), Dates.Hour(25), Dates.Minute(0)
+        Dates.Month(2),
+        Dates.Day(15),
+        Dates.Year(1996),
+        Dates.Hour(25),
+        Dates.Minute(0),
     ]
     @test Dates.parse_components(str, df) == parsed
     @test_throws ArgumentError Dates.parse(DateTime, str, df)
 end
 
 @testset "DateFormat printing" begin
-    @test sprint(show, DateFormat("yyyzzxmmdd\\MHH:MM:SS\\P")) == "dateformat\"yyyzzxmmdd\\MHH:MM:SSP\""
+    @test sprint(show, DateFormat("yyyzzxmmdd\\MHH:MM:SS\\P")) ==
+          "dateformat\"yyyzzxmmdd\\MHH:MM:SSP\""
     @test sprint(show, DateFormat("yyy").tokens[1]) == "DatePart(yyy)"
     @test sprint(show, DateFormat("mmzzdd").tokens[2]) == "Delim(zz)"
     @test sprint(show, DateFormat("ddxmm").tokens[2]) == "Delim(x)"
@@ -172,8 +180,12 @@ end
     @test Dates.format(dt + Dates.Hour(10), f) == k * " zzz"
     l = "1996-01-15 10:10:10.25"
     f = "yyyy-mm-dd HH:MM:SS.ss zzz"
-    @test Dates.DateTime(l, f) == dt + Dates.Hour(10) + Dates.Minute(10) + Dates.Second(10) + Dates.Millisecond(250)
-    @test Dates.format(dt + Dates.Hour(10) + Dates.Minute(10) + Dates.Second(10) + Dates.Millisecond(250), f) == l * " zzz"
+    @test Dates.DateTime(l, f) ==
+          dt + Dates.Hour(10) + Dates.Minute(10) + Dates.Second(10) + Dates.Millisecond(250)
+    @test Dates.format(
+        dt + Dates.Hour(10) + Dates.Minute(10) + Dates.Second(10) + Dates.Millisecond(250),
+        f,
+    ) == l * " zzz"
 
     r = "1/15/1996" # Excel
     f = "m/dd/yyyy"
@@ -248,7 +260,8 @@ end
     @test Dates.Date("111", f) == Dates.Date(1)
     @test Dates.Date("1", f) == Dates.Date(1)
 
-    @test Dates.DateTime("20140529 120000", "yyyymmdd HHMMSS") == Dates.DateTime(2014, 5, 29, 12)
+    @test Dates.DateTime("20140529 120000", "yyyymmdd HHMMSS") ==
+          Dates.DateTime(2014, 5, 29, 12)
 
     @test Dates.Date(string(Dates.Date(dt))) == Dates.Date(dt)
     @test Dates.DateTime(string(dt)) == dt
@@ -278,32 +291,56 @@ end
 
 @testset "Customizing locale" begin
     Dates.LOCALES["french"] = Dates.DateLocale(
-        ["janvier", "février", "mars", "avril", "mai", "juin",
-         "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
-        ["janv", "févr", "mars", "avril", "mai", "juin",
-         "juil", "août", "sept", "oct", "nov", "déc"],
+        [
+            "janvier",
+            "février",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juillet",
+            "août",
+            "septembre",
+            "octobre",
+            "novembre",
+            "décembre",
+        ],
+        [
+            "janv",
+            "févr",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juil",
+            "août",
+            "sept",
+            "oct",
+            "nov",
+            "déc",
+        ],
         ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"],
         [""],
     )
 
     f = "dd uuuuu yyyy"
-    @test Dates.Date("28 mai 2014", f; locale="french") == Dates.Date(2014, 5, 28)
-    @test Dates.format(Dates.Date(2014, 5, 28), f; locale="french") == "28 mai 2014"
-    @test Dates.Date("28 févr 2014", f; locale="french") == Dates.Date(2014, 2, 28)
-    @test Dates.format(Dates.Date(2014, 2, 28), f; locale="french") == "28 févr 2014"
-    @test Dates.Date("28 août 2014", f; locale="french") == Dates.Date(2014, 8, 28)
-    @test Dates.format(Dates.Date(2014, 8, 28), f; locale="french") == "28 août 2014"
-    @test Dates.Date("28 avril 2014", f; locale="french") == Dates.Date(2014, 4, 28)
-    @test Dates.format(Dates.Date(2014, 4, 28), f; locale="french") == "28 avril 2014"
+    @test Dates.Date("28 mai 2014", f; locale = "french") == Dates.Date(2014, 5, 28)
+    @test Dates.format(Dates.Date(2014, 5, 28), f; locale = "french") == "28 mai 2014"
+    @test Dates.Date("28 févr 2014", f; locale = "french") == Dates.Date(2014, 2, 28)
+    @test Dates.format(Dates.Date(2014, 2, 28), f; locale = "french") == "28 févr 2014"
+    @test Dates.Date("28 août 2014", f; locale = "french") == Dates.Date(2014, 8, 28)
+    @test Dates.format(Dates.Date(2014, 8, 28), f; locale = "french") == "28 août 2014"
+    @test Dates.Date("28 avril 2014", f; locale = "french") == Dates.Date(2014, 4, 28)
+    @test Dates.format(Dates.Date(2014, 4, 28), f; locale = "french") == "28 avril 2014"
 
     f = "dd u yyyy"
-    @test Dates.Date("28 avril 2014", f; locale="french") == Dates.Date(2014, 4, 28)
+    @test Dates.Date("28 avril 2014", f; locale = "french") == Dates.Date(2014, 4, 28)
     f = "dduuuuyyyy"
     # parses 3 and 4 character month names
-    @test Dates.Date("28mai2014", f; locale="french") == Dates.Date(2014, 5, 28)
-    @test Dates.Date("28août2014", f; locale="french") == Dates.Date(2014, 8, 28)
+    @test Dates.Date("28mai2014", f; locale = "french") == Dates.Date(2014, 5, 28)
+    @test Dates.Date("28août2014", f; locale = "french") == Dates.Date(2014, 8, 28)
     # doesn't parse month name greater than 4 chars
-    @test_throws ArgumentError Dates.Date("28avril2014", f; locale="french")
+    @test_throws ArgumentError Dates.Date("28avril2014", f; locale = "french")
 end
 
 @testset "year digits parsing" begin
@@ -317,12 +354,13 @@ end
     f = "duy"
     globex = ["f", "g", "h", "j", "k", "m", "n", "q", "u", "v", "x", "z"]
     locale = Dates.DateLocale(globex, map(uppercase, globex), globex[1:7], globex[1:7])
-    @test Dates.Date("1F4", f; locale=locale) + Dates.Year(2010) == Dates.Date(2014, 1, 1)
-    @test Dates.format(Dates.Date(2014, 1, 1), f; locale=locale) == "1F4"
+    @test Dates.Date("1F4", f; locale = locale) + Dates.Year(2010) == Dates.Date(2014, 1, 1)
+    @test Dates.format(Dates.Date(2014, 1, 1), f; locale = locale) == "1F4"
 
     # From Matt Bauman
     f = "yyyy-mm-ddTHH:MM:SS"
-    @test Dates.DateTime("2014-05-28T16:46:04", f) == Dates.DateTime(2014, 5, 28, 16, 46, 04)
+    @test Dates.DateTime("2014-05-28T16:46:04", f) ==
+          Dates.DateTime(2014, 5, 28, 16, 46, 04)
 end
 
 @testset "Error handling" begin
@@ -349,9 +387,19 @@ end
 end
 
 @testset "formerly vectorized Date/DateTime/format methods" begin
-    dr = ["2000-01-01", "2000-01-02", "2000-01-03", "2000-01-04", "2000-01-05",
-          "2000-01-06", "2000-01-07", "2000-01-08", "2000-01-09", "2000-01-10"]
-    dr2 = [Dates.Date(2000) : Dates.Day(1) : Dates.Date(2000, 1, 10);]
+    dr = [
+        "2000-01-01",
+        "2000-01-02",
+        "2000-01-03",
+        "2000-01-04",
+        "2000-01-05",
+        "2000-01-06",
+        "2000-01-07",
+        "2000-01-08",
+        "2000-01-09",
+        "2000-01-10",
+    ]
+    dr2 = [Dates.Date(2000):Dates.Day(1):Dates.Date(2000, 1, 10);]
     @test Dates.Date.(dr) == dr2
     @test Dates.Date.(dr, dateformat"yyyy-mm-dd") == dr2
     @test Dates.DateTime.(dr) == Dates.DateTime.(dr2)
@@ -359,7 +407,7 @@ end
 
     @test Dates.format.(dr2, "yyyy-mm-dd") == dr
 
-    @test typeof(Dates.Date.(dr)) == Array{Date, 1}
+    @test typeof(Dates.Date.(dr)) == Array{Date,1}
 end
 
 @testset "Issue 13" begin
@@ -382,18 +430,30 @@ end
     @test Dates.format(dt, "yyyy-mm-dd e") == "2014-08-23 Sat"
     @test Dates.format(dt, "yyyy-e-mm-dd") == "2014-Sat-08-23"
 
-    @test Dates.format(Dates.DateTime(2014, 1, 2, 0, 0, 0, 999), Dates.RFC1123Format) == "Thu, 02 Jan 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 2, 18, 0, 0, 0, 9), Dates.RFC1123Format) == "Tue, 18 Feb 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 3, 8, 0, 0, 0, 9), Dates.RFC1123Format) == "Sat, 08 Mar 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 4, 28, 0, 0, 0, 9), Dates.RFC1123Format) == "Mon, 28 Apr 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 5, 10, 0, 0, 0, 9), Dates.RFC1123Format) == "Sat, 10 May 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 6, 4, 0, 0, 0, 9), Dates.RFC1123Format) == "Wed, 04 Jun 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 7, 13, 0, 0, 0, 9), Dates.RFC1123Format) == "Sun, 13 Jul 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 8, 17, 0, 0, 0, 9), Dates.RFC1123Format) == "Sun, 17 Aug 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 9, 20, 0, 0, 0, 9), Dates.RFC1123Format) == "Sat, 20 Sep 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 10, 31, 0, 0, 0, 9), Dates.RFC1123Format) == "Fri, 31 Oct 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 11, 2, 0, 0, 0, 9), Dates.RFC1123Format) == "Sun, 02 Nov 2014 00:00:00"
-    @test Dates.format(Dates.DateTime(2014, 12, 5, 0, 0, 0, 9), Dates.RFC1123Format) == "Fri, 05 Dec 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 1, 2, 0, 0, 0, 999), Dates.RFC1123Format) ==
+          "Thu, 02 Jan 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 2, 18, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Tue, 18 Feb 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 3, 8, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Sat, 08 Mar 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 4, 28, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Mon, 28 Apr 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 5, 10, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Sat, 10 May 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 6, 4, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Wed, 04 Jun 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 7, 13, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Sun, 13 Jul 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 8, 17, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Sun, 17 Aug 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 9, 20, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Sat, 20 Sep 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 10, 31, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Fri, 31 Oct 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 11, 2, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Sun, 02 Nov 2014 00:00:00"
+    @test Dates.format(Dates.DateTime(2014, 12, 5, 0, 0, 0, 9), Dates.RFC1123Format) ==
+          "Fri, 05 Dec 2014 00:00:00"
 
     dt = Dates.DateTime(2016, 11, 12, 7, 45, 36)
     @test parse(Dates.DateTime, "Sat, 12 Nov 2016 07:45:36", Dates.RFC1123Format) == dt
@@ -418,8 +478,13 @@ end
     str = "2015-07-24T05:38:19.591Z"
     dt = Dates.DateTime(2015, 7, 24, 5, 38, 19, 591)
     parsed = Any[
-        Dates.Year(2015), Dates.Month(7), Dates.Day(24),
-        Dates.Hour(5), Dates.Minute(38), Dates.Second(19), Dates.Millisecond(591)
+        Dates.Year(2015),
+        Dates.Month(7),
+        Dates.Day(24),
+        Dates.Hour(5),
+        Dates.Minute(38),
+        Dates.Second(19),
+        Dates.Millisecond(591),
     ]
 
     format = "yyyy-mm-ddTHH:MM:SS.sssZ"
@@ -466,22 +531,29 @@ end
 @test tryparse(Dates.Date, "0-1000") === nothing
 
 @testset "parse milliseconds, Issue #22100" begin
-    @test Dates.DateTime("2017-Mar-17 00:00:00.0000", "y-u-d H:M:S.s") == Dates.DateTime(2017, 3, 17)
+    @test Dates.DateTime("2017-Mar-17 00:00:00.0000", "y-u-d H:M:S.s") ==
+          Dates.DateTime(2017, 3, 17)
     @test Dates.parse_components(".1", Dates.DateFormat(".s")) == [Dates.Millisecond(100)]
     @test Dates.parse_components(".12", Dates.DateFormat(".s")) == [Dates.Millisecond(120)]
     @test Dates.parse_components(".123", Dates.DateFormat(".s")) == [Dates.Millisecond(123)]
-    @test Dates.parse_components(".1230", Dates.DateFormat(".s")) == [Dates.Millisecond(123)]
+    @test Dates.parse_components(".1230", Dates.DateFormat(".s")) ==
+          [Dates.Millisecond(123)]
     @test_throws InexactError Dates.parse_components(".1234", Dates.DateFormat(".s"))
 
     # Ensure that no overflow occurs when using Int32 literals: Int32(10)^10
-    @test Dates.parse_components("." * rpad(999, 10, '0'), Dates.DateFormat(".s")) == [Dates.Millisecond(999)]
+    @test Dates.parse_components("." * rpad(999, 10, '0'), Dates.DateFormat(".s")) ==
+          [Dates.Millisecond(999)]
 end
 
 @testset "Time Parsing" begin
     let t
         time_tuple(t::Dates.Time) = (
-            Dates.hour(t), Dates.minute(t), Dates.second(t),
-            Dates.millisecond(t), Dates.microsecond(t), Dates.nanosecond(t)
+            Dates.hour(t),
+            Dates.minute(t),
+            Dates.second(t),
+            Dates.millisecond(t),
+            Dates.microsecond(t),
+            Dates.nanosecond(t),
         )
 
         ## default ISOTimeFormat

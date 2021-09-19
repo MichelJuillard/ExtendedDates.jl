@@ -9,10 +9,14 @@ using InteractiveUtils: subtypes
 
 let
     for T in (Dates.Date, Dates.DateTime)
-        f1 = T(2014); l1 = T(2013, 12, 31)
-        f2 = T(2014); l2 = T(2014)
-        f3 = T(-2000); l3 = T(2000)
-        f4 = typemin(T); l4 = typemax(T)
+        f1 = T(2014)
+        l1 = T(2013, 12, 31)
+        f2 = T(2014)
+        l2 = T(2014)
+        f3 = T(-2000)
+        l3 = T(2000)
+        f4 = typemin(T)
+        l4 = typemax(T)
 
         for P in subtypes(Dates.DatePeriod)
             for pos_step in (P(1), P(2), P(50), P(2048), P(10000))
@@ -262,7 +266,7 @@ end
 
 # All the range representations we want to test
 # Date ranges
-dr  = Dates.DateTime(2013, 1, 1):Dates.Day(1):Dates.DateTime(2013, 2, 1)
+dr = Dates.DateTime(2013, 1, 1):Dates.Day(1):Dates.DateTime(2013, 2, 1)
 dr1 = Dates.DateTime(2013, 1, 1):Dates.Day(1):Dates.DateTime(2013, 1, 1)
 dr2 = Dates.DateTime(2013, 1, 1):Dates.Day(1):Dates.DateTime(2012, 2, 1) # empty range
 dr3 = Dates.DateTime(2013, 1, 1):Dates.Day(-1):Dates.DateTime(2012) # negative step
@@ -288,18 +292,40 @@ dr18 = typemax(Dates.DateTime):Dates.Month(-100000):typemin(Dates.DateTime)
 dr19 = typemax(Dates.DateTime):Dates.Year(-1000000):typemin(Dates.DateTime)
 dr20 = typemin(Dates.DateTime):Dates.Day(2):typemax(Dates.DateTime)
 
-drs = Any[dr, dr1, dr2, dr3, dr4, dr5, dr6, dr7, dr8, dr9, dr10,
-          dr11, dr12, dr13, dr14, dr15, dr16, dr17, dr18, dr19, dr20]
-drs2 = map(x->Dates.Date(first(x)):step(x):Dates.Date(last(x)), drs)
+drs = Any[
+    dr,
+    dr1,
+    dr2,
+    dr3,
+    dr4,
+    dr5,
+    dr6,
+    dr7,
+    dr8,
+    dr9,
+    dr10,
+    dr11,
+    dr12,
+    dr13,
+    dr14,
+    dr15,
+    dr16,
+    dr17,
+    dr18,
+    dr19,
+    dr20,
+]
+drs2 = map(x -> Dates.Date(first(x)):step(x):Dates.Date(last(x)), drs)
 
-@test map(length, drs) == map(x->size(x)[1], drs)
-@test map(length, drs) == map(x->length(Dates.Date(first(x)):step(x):Dates.Date(last(x))), drs)
-@test map(length, drs) == map(x->length(reverse(x)), drs)
-@test all(x->findall(in(x), x)==[1:length(x);], drs[1:4])
+@test map(length, drs) == map(x -> size(x)[1], drs)
+@test map(length, drs) ==
+      map(x -> length(Dates.Date(first(x)):step(x):Dates.Date(last(x))), drs)
+@test map(length, drs) == map(x -> length(reverse(x)), drs)
+@test all(x -> findall(in(x), x) == [1:length(x);], drs[1:4])
 @test isempty(dr2)
-@test all(x->reverse(x) == range(last(x), step=-step(x), length=length(x)), drs)
-@test all(x->minimum(x) == (step(x) < zero(step(x)) ? last(x) : first(x)), drs[4:end])
-@test all(x->maximum(x) == (step(x) < zero(step(x)) ? first(x) : last(x)), drs[4:end])
+@test all(x -> reverse(x) == range(last(x), step = -step(x), length = length(x)), drs)
+@test all(x -> minimum(x) == (step(x) < zero(step(x)) ? last(x) : first(x)), drs[4:end])
+@test all(x -> maximum(x) == (step(x) < zero(step(x)) ? first(x) : last(x)), drs[4:end])
 @test all(drs[1:3]) do dd
     for (i, d) in enumerate(dd)
         @test d == (first(dd) + Dates.Day(i - 1))
@@ -309,10 +335,11 @@ end
 @test_throws MethodError dr .+ 1
 a = Dates.DateTime(2013, 1, 1)
 b = Dates.DateTime(2013, 2, 1)
-@test map!(x->x + Dates.Day(1), Vector{Dates.DateTime}(undef, 32), dr) == [(a + Dates.Day(1)):Dates.Day(1):(b + Dates.Day(1));]
-@test map(x->x + Dates.Day(1), dr) == [(a + Dates.Day(1)):Dates.Day(1):(b + Dates.Day(1));]
+@test map!(x -> x + Dates.Day(1), Vector{Dates.DateTime}(undef, 32), dr) ==
+      [(a+Dates.Day(1)):Dates.Day(1):(b+Dates.Day(1));]
+@test map(x -> x + Dates.Day(1), dr) == [(a+Dates.Day(1)):Dates.Day(1):(b+Dates.Day(1));]
 
-@test map(x->a in x, drs[1:4]) == [true, true, false, true]
+@test map(x -> a in x, drs[1:4]) == [true, true, false, true]
 @test a in dr
 @test b in dr
 @test Dates.DateTime(2013, 1, 3) in dr
@@ -320,8 +347,8 @@ b = Dates.DateTime(2013, 2, 1)
 @test Dates.DateTime(2013, 1, 26) in dr
 @test !(Dates.DateTime(2012, 1, 1) in dr)
 
-@test all(x->sort(x) == (step(x) < zero(step(x)) ? reverse(x) : x), drs)
-@test all(x->step(x) < zero(step(x)) ? issorted(reverse(x)) : issorted(x), drs)
+@test all(x -> sort(x) == (step(x) < zero(step(x)) ? reverse(x) : x), drs)
+@test all(x -> step(x) < zero(step(x)) ? issorted(reverse(x)) : issorted(x), drs)
 
 @test length(b:Dates.Day(-1):a) == 32
 @test length(b:Dates.Day(1):a) == 0
@@ -342,10 +369,11 @@ b = Dates.DateTime(2013, 2, 1)
 @test first(a:Dates.Day(1):Dates.DateTime(20000000, 1, 1)) == a
 @test first(a:Dates.Day(1):Dates.DateTime(200000000, 1, 1)) == a
 @test first(a:Dates.Day(1):typemax(Dates.DateTime)) == a
-@test first(typemin(Dates.DateTime):Dates.Day(1):typemax(Dates.DateTime)) == typemin(Dates.DateTime)
+@test first(typemin(Dates.DateTime):Dates.Day(1):typemax(Dates.DateTime)) ==
+      typemin(Dates.DateTime)
 
 # Date ranges
-dr  = Dates.Date(2013, 1, 1):Dates.Day(1):Dates.Date(2013, 2, 1)
+dr = Dates.Date(2013, 1, 1):Dates.Day(1):Dates.Date(2013, 2, 1)
 dr1 = Dates.Date(2013, 1, 1):Dates.Day(1):Dates.Date(2013, 1, 1)
 dr2 = Dates.Date(2013, 1, 1):Dates.Day(1):Dates.Date(2012, 2, 1) # empty range
 dr3 = Dates.Date(2013, 1, 1):Dates.Day(-1):Dates.Date(2012, 1, 1) # negative step
@@ -369,15 +397,36 @@ dr18 = typemax(Dates.Date):Dates.Month(-100000):typemin(Dates.Date)
 dr19 = typemax(Dates.Date):Dates.Year(-1000000):typemin(Dates.Date)
 dr20 = typemin(Dates.Date):Dates.Day(2):typemax(Dates.Date)
 
-drs = Any[dr, dr1, dr2, dr3, dr4, dr5, dr6, dr7, dr8, dr9, dr10,
-          dr11, dr12, dr13, dr14, dr15, dr16, dr17, dr18, dr19, dr20]
+drs = Any[
+    dr,
+    dr1,
+    dr2,
+    dr3,
+    dr4,
+    dr5,
+    dr6,
+    dr7,
+    dr8,
+    dr9,
+    dr10,
+    dr11,
+    dr12,
+    dr13,
+    dr14,
+    dr15,
+    dr16,
+    dr17,
+    dr18,
+    dr19,
+    dr20,
+]
 
-@test map(length, drs) == map(x->size(x)[1], drs)
-@test all(x->findall(in(x), x) == [1:length(x);], drs[1:4])
+@test map(length, drs) == map(x -> size(x)[1], drs)
+@test all(x -> findall(in(x), x) == [1:length(x);], drs[1:4])
 @test isempty(dr2)
-@test all(x->reverse(x) == last(x): - step(x):first(x), drs)
-@test all(x->minimum(x) == (step(x) < zero(step(x)) ? last(x) : first(x)), drs[4:end])
-@test all(x->maximum(x) == (step(x) < zero(step(x)) ? first(x) : last(x)), drs[4:end])
+@test all(x -> reverse(x) == last(x):-step(x):first(x), drs)
+@test all(x -> minimum(x) == (step(x) < zero(step(x)) ? last(x) : first(x)), drs[4:end])
+@test all(x -> maximum(x) == (step(x) < zero(step(x)) ? first(x) : last(x)), drs[4:end])
 @test all(drs[1:3]) do dd
     for (i, d) in enumerate(dd)
         @test d == (first(dd) + Dates.Day(i - 1))
@@ -387,10 +436,11 @@ end
 @test_throws MethodError dr .+ 1
 a = Dates.Date(2013, 1, 1)
 b = Dates.Date(2013, 2, 1)
-@test map!(x->x + Dates.Day(1), Vector{Dates.Date}(undef, 32), dr) == [(a + Dates.Day(1)):Dates.Day(1):(b + Dates.Day(1));]
-@test map(x->x + Dates.Day(1), dr) == [(a + Dates.Day(1)):Dates.Day(1):(b + Dates.Day(1));]
+@test map!(x -> x + Dates.Day(1), Vector{Dates.Date}(undef, 32), dr) ==
+      [(a+Dates.Day(1)):Dates.Day(1):(b+Dates.Day(1));]
+@test map(x -> x + Dates.Day(1), dr) == [(a+Dates.Day(1)):Dates.Day(1):(b+Dates.Day(1));]
 
-@test map(x->a in x, drs[1:4]) == [true, true, false, true]
+@test map(x -> a in x, drs[1:4]) == [true, true, false, true]
 @test a in dr
 @test b in dr
 @test Dates.Date(2013, 1, 3) in dr
@@ -398,8 +448,8 @@ b = Dates.Date(2013, 2, 1)
 @test Dates.Date(2013, 1, 26) in dr
 @test !(Dates.Date(2012, 1, 1) in dr)
 
-@test all(x->sort(x) == (step(x) < zero(step(x)) ? reverse(x) : x), drs)
-@test all(x->step(x) < zero(step(x)) ? issorted(reverse(x)) : issorted(x), drs)
+@test all(x -> sort(x) == (step(x) < zero(step(x)) ? reverse(x) : x), drs)
+@test all(x -> step(x) < zero(step(x)) ? issorted(reverse(x)) : issorted(x), drs)
 
 @test length(b:Dates.Day(-1):a) == 32
 @test length(b:Dates.Day(1):a) == 0
@@ -431,21 +481,24 @@ b = Dates.Date(2013, 2, 1)
 @test length(typemin(Dates.DateTime):Dates.Week(1):typemax(Dates.DateTime)) == 15250284420
 @test length(typemin(Dates.DateTime):Dates.Day(1):typemax(Dates.DateTime)) == 106751990938
 @test length(typemin(Dates.DateTime):Dates.Hour(1):typemax(Dates.DateTime)) == 2562047782512
-@test length(typemin(Dates.DateTime):Dates.Minute(1):typemax(Dates.DateTime)) == 153722866950720
-@test length(typemin(Dates.DateTime):Dates.Second(1):typemax(Dates.DateTime)) == 9223372017043200
-@test length(typemin(DateTime):Dates.Millisecond(1):typemax(DateTime)) == 9223372017043199001
+@test length(typemin(Dates.DateTime):Dates.Minute(1):typemax(Dates.DateTime)) ==
+      153722866950720
+@test length(typemin(Dates.DateTime):Dates.Second(1):typemax(Dates.DateTime)) ==
+      9223372017043200
+@test length(typemin(DateTime):Dates.Millisecond(1):typemax(DateTime)) ==
+      9223372017043199001
 
 c = Dates.Date(2013, 6, 1)
 @test length(a:Dates.Month(1):c) == 6
-@test [a:Dates.Month(1):c;] == [a + Dates.Month(1)*i for i in 0:5]
+@test [a:Dates.Month(1):c;] == [a + Dates.Month(1) * i for i = 0:5]
 @test [a:Dates.Month(2):Dates.Date(2013, 1, 2);] == [a]
 @test [c:Dates.Month(-1):a;] == reverse([a:Dates.Month(1):c;])
 
-@test length(range(Date(2000), step=Dates.Day(1), length=366)) == 366
+@test length(range(Date(2000), step = Dates.Day(1), length = 366)) == 366
 let n = 100000
     local a = Dates.Date(2000)
     for i = 1:n
-        @test length(range(a, step=Dates.Day(1), length=i)) == i
+        @test length(range(a, step = Dates.Day(1), length = i)) == i
     end
     return a + Dates.Day(n)
 end
@@ -481,7 +534,7 @@ b = Dates.Date(2013, 2, 1)
 
 let n = 100000
     local a, b
-    a= b = Dates.Date(0)
+    a = b = Dates.Date(0)
     for i = 1:n
         @test length(a:Dates.Year(1):b) == i
         b += Dates.Year(1)
@@ -493,6 +546,7 @@ let n = 10000,
     b = Dates.Date(1986, 12, 27),
     c = Dates.DateTime(1985, 12, 5),
     d = Dates.DateTime(1986, 12, 27)
+
     for i = 1:n
         @test length(a:Dates.Month(1):b) == 13
         @test length(a:Dates.Year(1):b) == 2
@@ -518,24 +572,31 @@ end
 @test length(typemin(Dates.Year):Dates.Year(1):typemax(Dates.Year)) == 0 # overflow
 @test_throws MethodError Dates.Date(0):Dates.DateTime(2000)
 @test_throws MethodError Dates.Date(0):Dates.Year(10)
-@test length(range(Dates.Date(2000), step=Dates.Day(1), length=366)) == 366
-@test last(range(Dates.Date(2000), step=Dates.Day(1), length=366)) == Dates.Date(2000, 12, 31)
-@test last(range(Dates.Date(2001), step=Dates.Day(1), length=365)) == Dates.Date(2001, 12, 31)
-@test last(range(Dates.Date(2000), step=Dates.Day(1), length=367)) == last(range(Dates.Date(2000), step=Dates.Month(12), length=2)) == last(range(Dates.Date(2000), step=Dates.Year(1), length=2))
-@test last(range(Dates.DateTime(2000), step=Dates.Day(366), length=2)) == last(range(Dates.DateTime(2000), step=Dates.Hour(8784), length=2))
+@test length(range(Dates.Date(2000), step = Dates.Day(1), length = 366)) == 366
+@test last(range(Dates.Date(2000), step = Dates.Day(1), length = 366)) ==
+      Dates.Date(2000, 12, 31)
+@test last(range(Dates.Date(2001), step = Dates.Day(1), length = 365)) ==
+      Dates.Date(2001, 12, 31)
+@test last(range(Dates.Date(2000), step = Dates.Day(1), length = 367)) ==
+      last(range(Dates.Date(2000), step = Dates.Month(12), length = 2)) ==
+      last(range(Dates.Date(2000), step = Dates.Year(1), length = 2))
+@test last(range(Dates.DateTime(2000), step = Dates.Day(366), length = 2)) ==
+      last(range(Dates.DateTime(2000), step = Dates.Hour(8784), length = 2))
 
 # Issue 5
-lastdaysofmonth = [Dates.Date(2014, i, Dates.daysinmonth(2014, i)) for i=1:12]
+lastdaysofmonth = [Dates.Date(2014, i, Dates.daysinmonth(2014, i)) for i = 1:12]
 @test [Date(2014, 1, 31):Dates.Month(1):Date(2015);] == lastdaysofmonth
 
 # Range addition/subtraction:
 let d = Dates.Day(1)
-    @test (Dates.Date(2000):d:Dates.Date(2001)) + d == (Dates.Date(2000) + d:d:Dates.Date(2001) + d)
-    @test (Dates.Date(2000):d:Dates.Date(2001)) - d == (Dates.Date(2000) - d:d:Dates.Date(2001) - d)
+    @test (Dates.Date(2000):d:Dates.Date(2001)) + d ==
+          (Dates.Date(2000)+d:d:Dates.Date(2001)+d)
+    @test (Dates.Date(2000):d:Dates.Date(2001)) - d ==
+          (Dates.Date(2000)-d:d:Dates.Date(2001)-d)
 end
 
 # Time ranges
-dr  = Dates.Time(23, 1, 1):Dates.Second(1):Dates.Time(23, 2, 1)
+dr = Dates.Time(23, 1, 1):Dates.Second(1):Dates.Time(23, 2, 1)
 dr1 = Dates.Time(23, 1, 1):Dates.Second(1):Dates.Time(23, 1, 1)
 dr2 = Dates.Time(23, 1, 1):Dates.Second(1):Dates.Time(22, 2, 1) # empty range
 dr3 = Dates.Time(23, 1, 1):Dates.Minute(-1):Dates.Time(22, 1, 1) # negative step
@@ -555,23 +616,40 @@ dr18 = typemax(Dates.Time):Dates.Minute(-100):typemin(Dates.Time)
 dr19 = typemax(Dates.Time):Dates.Hour(-10):typemin(Dates.Time)
 dr20 = typemin(Dates.Time):Dates.Microsecond(2):typemax(Dates.Time)
 
-drs = Any[dr, dr1, dr2, dr3, dr8, dr9, dr10,
-          dr11, dr12, dr13, dr14, dr15, dr16, dr17, dr18, dr19, dr20]
+drs = Any[
+    dr,
+    dr1,
+    dr2,
+    dr3,
+    dr8,
+    dr9,
+    dr10,
+    dr11,
+    dr12,
+    dr13,
+    dr14,
+    dr15,
+    dr16,
+    dr17,
+    dr18,
+    dr19,
+    dr20,
+]
 
-@test map(length, drs) == map(x->size(x)[1], drs)
-@test all(x->findall(in(x), x) == [1:length(x);], drs[1:4])
+@test map(length, drs) == map(x -> size(x)[1], drs)
+@test all(x -> findall(in(x), x) == [1:length(x);], drs[1:4])
 @test isempty(dr2)
-@test all(x->reverse(x) == last(x): - step(x):first(x), drs)
-@test all(x->minimum(x) == (step(x) < zero(step(x)) ? last(x) : first(x)), drs[4:end])
-@test all(x->maximum(x) == (step(x) < zero(step(x)) ? first(x) : last(x)), drs[4:end])
+@test all(x -> reverse(x) == last(x):-step(x):first(x), drs)
+@test all(x -> minimum(x) == (step(x) < zero(step(x)) ? last(x) : first(x)), drs[4:end])
+@test all(x -> maximum(x) == (step(x) < zero(step(x)) ? first(x) : last(x)), drs[4:end])
 @test_throws MethodError dr .+ 1
 
 a = Dates.Time(23, 1, 1)
-@test map(x->a in x, drs[1:4]) == [true, true, false, true]
+@test map(x -> a in x, drs[1:4]) == [true, true, false, true]
 @test a in dr
 
-@test all(x->sort(x) == (step(x) < zero(step(x)) ? reverse(x) : x), drs)
-@test all(x->step(x) < zero(step(x)) ? issorted(reverse(x)) : issorted(x), drs)
+@test all(x -> sort(x) == (step(x) < zero(step(x)) ? reverse(x) : x), drs)
+@test all(x -> step(x) < zero(step(x)) ? issorted(reverse(x)) : issorted(x), drs)
 
 @test !(1 in Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05))
 @test !(Complex(1, 0) in Date(2017, 01, 01):Dates.Day(1):Date(2017, 01, 05))

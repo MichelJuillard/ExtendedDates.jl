@@ -13,7 +13,7 @@ year(y::YearDate) = value(y) + 1
 year(s::SemesterDate) = div(value(s), 2) + 1
 year(q::QuarterDate) = div(value(q), 4) + 1
 year(m::MonthDate) = div(value(m), 12) + 1
-year(w::WeekDate) = Dates.year((value(w)*7))
+year(w::WeekDate) = Dates.year((value(w) * 7))
 year(d::DayDate) = Dates.year(value(d))
 semester(s::SemesterDate) = rem(abs(value(s)) - 1, 2) + 1
 semester(q::QuarterDate) = rem(abs(value(q)), 2) + 1
@@ -24,7 +24,7 @@ quarter(m::MonthDate) = div(rem(abs(value(m)) - 1, 12), 4) + 1
 quarter(d::DayDate) = quarter(value(d))
 month(m::MonthDate) = rem(abs(value(m)) - 1, 12) + 1
 month(d::DayDate) = month(value(d))
-week(w::WeekDate) = Dates.week(value(w)*7)
+week(w::WeekDate) = Dates.week(value(w) * 7)
 week(d::DayDate) = Dates.week(value(d))
 day(d::DayDate) = Dates.day(value(d))
 
@@ -47,7 +47,7 @@ function month(d::Int64)
 end
 
 week(d) = Dates.week(d)
-day(d) = Dates.day(d) 
+day(d) = Dates.day(d)
 
 dayofmonth(dt::Dates.TimeType) = day(dt)
 
@@ -100,4 +100,3 @@ for func in (:day, :dayofmonth)
         """ $func(dt::Dates.TimeType)
     end
 end
-

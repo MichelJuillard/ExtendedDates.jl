@@ -17,13 +17,48 @@ Sep = Dates.DateTime(2013, 9, 9) # Monday
 Oct = Dates.DateTime(2013, 10, 10) # Thursday
 Nov = Dates.DateTime(2013, 11, 11) # Monday
 Dec = Dates.DateTime(2013, 12, 11) # Wednesday
-monthnames = ["January", "February", "March", "April",
-                "May", "June", "July", "August", "September",
-                "October", "November", "December"]
-daysofweek = [Dates.Tue, Dates.Sat, Dates.Sun, Dates.Thu, Dates.Sun, Dates.Fri,
-              Dates.Sun, Dates.Thu, Dates.Mon, Dates.Thu, Dates.Mon, Dates.Wed]
-dows = ["Tuesday", "Saturday", "Sunday", "Thursday", "Sunday", "Friday",
-        "Sunday", "Thursday", "Monday", "Thursday", "Monday", "Wednesday"]
+monthnames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
+daysofweek = [
+    Dates.Tue,
+    Dates.Sat,
+    Dates.Sun,
+    Dates.Thu,
+    Dates.Sun,
+    Dates.Fri,
+    Dates.Sun,
+    Dates.Thu,
+    Dates.Mon,
+    Dates.Thu,
+    Dates.Mon,
+    Dates.Wed,
+]
+dows = [
+    "Tuesday",
+    "Saturday",
+    "Sunday",
+    "Thursday",
+    "Sunday",
+    "Friday",
+    "Sunday",
+    "Thursday",
+    "Monday",
+    "Thursday",
+    "Monday",
+    "Wednesday",
+]
 daysinmonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 @testset "Name functions" begin
     for (i, dt) in enumerate([Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec])
@@ -42,33 +77,57 @@ daysinmonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 end
 @testset "Customizing locale" begin
     Dates.LOCALES["french"] = Dates.DateLocale(
-        ["janvier", "février", "mars", "avril", "mai", "juin",
-         "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
-        ["janv", "févr", "mars", "avril", "mai", "juin",
-         "juil", "août", "sept", "oct", "nov", "déc"],
+        [
+            "janvier",
+            "février",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juillet",
+            "août",
+            "septembre",
+            "octobre",
+            "novembre",
+            "décembre",
+        ],
+        [
+            "janv",
+            "févr",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juil",
+            "août",
+            "sept",
+            "oct",
+            "nov",
+            "déc",
+        ],
         ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"],
         [""],
     )
-    @test Dates.dayname(Nov; locale="french") == "lundi"
-    @test Dates.dayname(Jan; locale="french") == "mardi"
-    @test Dates.dayname(Dec; locale="french") == "mercredi"
-    @test Dates.dayname(Apr; locale="french") == "jeudi"
-    @test Dates.dayname(Jun; locale="french") == "vendredi"
-    @test Dates.dayname(Feb; locale="french") == "samedi"
-    @test Dates.dayname(May; locale="french") == "dimanche"
+    @test Dates.dayname(Nov; locale = "french") == "lundi"
+    @test Dates.dayname(Jan; locale = "french") == "mardi"
+    @test Dates.dayname(Dec; locale = "french") == "mercredi"
+    @test Dates.dayname(Apr; locale = "french") == "jeudi"
+    @test Dates.dayname(Jun; locale = "french") == "vendredi"
+    @test Dates.dayname(Feb; locale = "french") == "samedi"
+    @test Dates.dayname(May; locale = "french") == "dimanche"
 
-    @test Dates.monthname(Jan; locale="french") == "janvier"
-    @test Dates.monthname(Feb; locale="french") == "février"
-    @test Dates.monthname(Mar; locale="french") == "mars"
-    @test Dates.monthname(Apr; locale="french") == "avril"
-    @test Dates.monthname(May; locale="french") == "mai"
-    @test Dates.monthname(Jun; locale="french") == "juin"
-    @test Dates.monthname(Jul; locale="french") == "juillet"
-    @test Dates.monthname(Aug; locale="french") == "août"
-    @test Dates.monthname(Sep; locale="french") == "septembre"
-    @test Dates.monthname(Oct; locale="french") == "octobre"
-    @test Dates.monthname(Nov; locale="french") == "novembre"
-    @test Dates.monthname(Dec; locale="french") == "décembre"
+    @test Dates.monthname(Jan; locale = "french") == "janvier"
+    @test Dates.monthname(Feb; locale = "french") == "février"
+    @test Dates.monthname(Mar; locale = "french") == "mars"
+    @test Dates.monthname(Apr; locale = "french") == "avril"
+    @test Dates.monthname(May; locale = "french") == "mai"
+    @test Dates.monthname(Jun; locale = "french") == "juin"
+    @test Dates.monthname(Jul; locale = "french") == "juillet"
+    @test Dates.monthname(Aug; locale = "french") == "août"
+    @test Dates.monthname(Sep; locale = "french") == "septembre"
+    @test Dates.monthname(Oct; locale = "french") == "octobre"
+    @test Dates.monthname(Nov; locale = "french") == "novembre"
+    @test Dates.monthname(Dec; locale = "french") == "décembre"
 end
 @testset "leap years" begin
     @test Dates.isleapyear(Dates.DateTime(1900)) == false
@@ -143,12 +202,12 @@ end
     end
 end
 @testset "quarterofyear" begin
-    @test Dates.quarterofyear(Dates.Date(2000, 1, 1))  == 1
-    @test Dates.quarterofyear(Dates.Date(2000, 1, 31))  == 1
-    @test Dates.quarterofyear(Dates.Date(2000, 2, 1))  == 1
-    @test Dates.quarterofyear(Dates.Date(2000, 2, 29))  == 1
-    @test Dates.quarterofyear(Dates.Date(2000, 3, 1))  == 1
-    @test Dates.quarterofyear(Dates.Date(2000, 3, 31))  == 1
+    @test Dates.quarterofyear(Dates.Date(2000, 1, 1)) == 1
+    @test Dates.quarterofyear(Dates.Date(2000, 1, 31)) == 1
+    @test Dates.quarterofyear(Dates.Date(2000, 2, 1)) == 1
+    @test Dates.quarterofyear(Dates.Date(2000, 2, 29)) == 1
+    @test Dates.quarterofyear(Dates.Date(2000, 3, 1)) == 1
+    @test Dates.quarterofyear(Dates.Date(2000, 3, 31)) == 1
     @test Dates.quarterofyear(Dates.Date(2000, 4, 1)) == 2
     @test Dates.quarterofyear(Dates.Date(2000, 4, 30)) == 2
     @test Dates.quarterofyear(Dates.Date(2000, 5, 1)) == 2
@@ -168,12 +227,12 @@ end
     @test Dates.quarterofyear(Dates.Date(2000, 12, 1)) == 4
     @test Dates.quarterofyear(Dates.Date(2000, 12, 31)) == 4
 
-    @test Dates.quarterofyear(Dates.DateTime(2000, 1, 1))  == 1
-    @test Dates.quarterofyear(Dates.DateTime(2000, 1, 31))  == 1
-    @test Dates.quarterofyear(Dates.DateTime(2000, 2, 1))  == 1
-    @test Dates.quarterofyear(Dates.DateTime(2000, 2, 29))  == 1
-    @test Dates.quarterofyear(Dates.DateTime(2000, 3, 1))  == 1
-    @test Dates.quarterofyear(Dates.DateTime(2000, 3, 31))  == 1
+    @test Dates.quarterofyear(Dates.DateTime(2000, 1, 1)) == 1
+    @test Dates.quarterofyear(Dates.DateTime(2000, 1, 31)) == 1
+    @test Dates.quarterofyear(Dates.DateTime(2000, 2, 1)) == 1
+    @test Dates.quarterofyear(Dates.DateTime(2000, 2, 29)) == 1
+    @test Dates.quarterofyear(Dates.DateTime(2000, 3, 1)) == 1
+    @test Dates.quarterofyear(Dates.DateTime(2000, 3, 31)) == 1
     @test Dates.quarterofyear(Dates.DateTime(2000, 4, 1)) == 2
     @test Dates.quarterofyear(Dates.DateTime(2000, 4, 30)) == 2
     @test Dates.quarterofyear(Dates.DateTime(2000, 5, 1)) == 2

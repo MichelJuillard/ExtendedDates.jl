@@ -7,4 +7,3 @@ for T in (:Day, :Week, :Month, :Quarter, :Semester, :Year, :Undated)
         $T(dt::Dates.TimeType) = convert($T, dt)
     end
 end
-

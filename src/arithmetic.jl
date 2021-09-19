@@ -1,7 +1,9 @@
 
 # TimeType-Year arithmetic
-for (T1, T2) in zip((:Day, :Week, :Month, :Quarter, :Year),
-             (:DayDate, :WeekDate, :MonthDate, :QuarterDate, :YearDate))
+for (T1, T2) in zip(
+    (:Day, :Week, :Month, :Quarter, :Year),
+    (:DayDate, :WeekDate, :MonthDate, :QuarterDate, :YearDate),
+)
     @eval begin
         function (+)(y::$T2, dy::Dates.$T1)
             return $T2(Dates.UTInstant{Dates.$T1}(Dates.$T1(value(y) + Dates.value(dy))))

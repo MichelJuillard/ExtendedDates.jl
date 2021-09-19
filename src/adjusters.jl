@@ -140,7 +140,7 @@ julia> Dates.firstdayofquarter(DateTime("1996-08-20"))
 function firstdayofquarter end
 
 function firstdayofquarter(dt::Date)
-    y,m = yearmonth(dt)
+    y, m = yearmonth(dt)
     mm = m < 4 ? 1 : m < 7 ? 4 : m < 10 ? 7 : 10
     return Date(y, mm, 1)
 end
@@ -163,7 +163,7 @@ julia> Dates.lastdayofquarter(DateTime("1996-08-20"))
 function lastdayofquarter end
 
 function lastdayofquarter(dt::Date)
-    y,m = yearmonth(dt)
+    y, m = yearmonth(dt)
     mm, d = m < 4 ? (3, 31) : m < 7 ? (6, 30) : m < 10 ? (9, 30) : (12, 31)
     return Date(y, mm, d)
 end
@@ -174,7 +174,11 @@ struct DateFunction
     f::Function
     # validate boolean, single-arg inner constructor
     function DateFunction(@nospecialize(f), dt::TimeType)
-        isa(f(dt), Bool) || throw(ArgumentError("Provided function must take a single TimeType argument and return true or false"))
+        isa(f(dt), Bool) || throw(
+            ArgumentError(
+                "Provided function must take a single TimeType argument and return true or false",
+            ),
+        )
         return new(f)
     end
 end
@@ -189,7 +193,7 @@ function adjust(df::DateFunction, start, step, limit)
     throw(ArgumentError("Adjustment limit reached: $limit iterations"))
 end
 
-function adjust(func::Function, start; step::Period=Day(1), limit::Int=10000)
+function adjust(func::Function, start; step::Period = Day(1), limit::Int = 10000)
     return adjust(DateFunction(func, start), start, step, limit)
 end
 

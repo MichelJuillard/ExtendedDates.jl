@@ -126,7 +126,7 @@ emptyperiod = ((y + d) - d) - y
     @test_throws InexactError Dates.Year(BigFloat(1.2)) == y
     @test_throws InexactError Dates.Year(1.2) == y
     @test_throws InexactError Dates.Year(Float32(1.2)) == y
-    @test_throws InexactError Dates.Year(3//4) == y
+    @test_throws InexactError Dates.Year(3 // 4) == y
     @test_throws InexactError Dates.Year(complex(1.2)) == y
     @test_throws InexactError Dates.Year(Float16(1.2)) == y
     @test Dates.Year(true) == y
@@ -170,34 +170,38 @@ end
     @test_throws MethodError y + 1 == Dates.Year(2)
     @test_throws MethodError y + true == Dates.Year(2)
     @test_throws InexactError y + Dates.Year(1.2)
-    @test y + Dates.Year(1f0) == Dates.Year(2)
+    @test y + Dates.Year(1.0f0) == Dates.Year(2)
     @test y * 4 == Dates.Year(4)
-    @test y * 4f0 == Dates.Year(4)
+    @test y * 4.0f0 == Dates.Year(4)
     @test Dates.Year(2) * 0.5 == y
-    @test Dates.Year(2) * 3//2 == Dates.Year(3)
+    @test Dates.Year(2) * 3 // 2 == Dates.Year(3)
     @test_throws InexactError y * 0.5
-    @test_throws InexactError y * 3//4
-    @test (1:1:5)*Second(5) === Second(5)*(1:1:5) === Second(5):Second(5):Second(25) === (1:5)*Second(5)
-    @test collect(1:1:5)*Second(5) == Second(5)*collect(1:1:5) == (1:5)*Second(5)
-    @test (Second(2):Second(2):Second(10))/Second(2) === 1.0:1.0:5.0
-    @test collect(Second(2):Second(2):Second(10))/Second(2) == 1:1:5
+    @test_throws InexactError y * 3 // 4
+    @test (1:1:5) * Second(5) ===
+          Second(5) * (1:1:5) ===
+          Second(5):Second(5):Second(25) ===
+          (1:5) * Second(5)
+    @test collect(1:1:5) * Second(5) == Second(5) * collect(1:1:5) == (1:5) * Second(5)
+    @test (Second(2):Second(2):Second(10)) / Second(2) === 1.0:1.0:5.0
+    @test collect(Second(2):Second(2):Second(10)) / Second(2) == 1:1:5
     @test (Second(2):Second(2):Second(10)) / 2 === Second(1):Second(1):Second(5)
     @test collect(Second(2):Second(2):Second(10)) / 2 == Second(1):Second(1):Second(5)
     @test Dates.Year(4) / 2 == Dates.Year(2)
-    @test Dates.Year(4) / 2f0 == Dates.Year(2)
+    @test Dates.Year(4) / 2.0f0 == Dates.Year(2)
     @test Dates.Year(4) / 0.5 == Dates.Year(8)
-    @test Dates.Year(4) / 2//3 == Dates.Year(6)
+    @test Dates.Year(4) / 2 // 3 == Dates.Year(6)
     @test_throws InexactError Dates.Year(4) / 3.0
-    @test_throws InexactError Dates.Year(4) / 3//2
+    @test_throws InexactError Dates.Year(4) / 3 // 2
     @test div(y, 2) == Dates.Year(0)
     @test_throws MethodError div(2, y) == Dates.Year(2)
     @test div(y, y) == 1
-    @test y*10 % Dates.Year(5) == Dates.Year(0)
+    @test y * 10 % Dates.Year(5) == Dates.Year(0)
     @test_throws MethodError (y > 3) == false
     @test_throws MethodError (4 < y) == false
     @test 1 != y
     t = [y, y, y, y, y]
-    @test t .+ Dates.Year(2) == [Dates.Year(3), Dates.Year(3), Dates.Year(3), Dates.Year(3), Dates.Year(3)]
+    @test t .+ Dates.Year(2) ==
+          [Dates.Year(3), Dates.Year(3), Dates.Year(3), Dates.Year(3), Dates.Year(3)]
 
     let x = Dates.Year(5), y = Dates.Year(2)
         @test div(x, y) * y + rem(x, y) == x
@@ -213,9 +217,18 @@ end
     @test test == dt + (y - m + w - d + h - mi + s - ms)
     @test test == dt + y - m + w - d + (h - mi + s - ms)
     @test (dt + Dates.Year(4)) + Dates.Day(1) == dt + (Dates.Year(4) + Dates.Day(1))
-    @test Dates.Date(2014, 1, 29) + Dates.Month(1) + Dates.Day(1) + Dates.Month(1) + Dates.Day(1) ==
-        Dates.Date(2014, 1, 29) + Dates.Day(1) + Dates.Month(1) + Dates.Month(1) + Dates.Day(1)
-    @test Dates.Date(2014, 1, 29) + Dates.Month(1) + Dates.Day(1) == Dates.Date(2014, 1, 29) + Dates.Day(1) + Dates.Month(1)
+    @test Dates.Date(2014, 1, 29) +
+          Dates.Month(1) +
+          Dates.Day(1) +
+          Dates.Month(1) +
+          Dates.Day(1) ==
+          Dates.Date(2014, 1, 29) +
+          Dates.Day(1) +
+          Dates.Month(1) +
+          Dates.Month(1) +
+          Dates.Day(1)
+    @test Dates.Date(2014, 1, 29) + Dates.Month(1) + Dates.Day(1) ==
+          Dates.Date(2014, 1, 29) + Dates.Day(1) + Dates.Month(1)
 end
 @testset "traits" begin
     @test Dates._units(Dates.Year(0)) == " years"
@@ -332,11 +345,11 @@ end
 end
 @testset "Conversions" begin
     @test Dates.toms(ms) == Dates.value(Dates.Millisecond(ms)) == 1
-    @test Dates.toms(s)  == Dates.value(Dates.Millisecond(s)) == 1000
+    @test Dates.toms(s) == Dates.value(Dates.Millisecond(s)) == 1000
     @test Dates.toms(mi) == Dates.value(Dates.Millisecond(mi)) == 60000
-    @test Dates.toms(h)  == Dates.value(Dates.Millisecond(h)) == 3600000
-    @test Dates.toms(d)  == Dates.value(Dates.Millisecond(d)) == 86400000
-    @test Dates.toms(w)  == Dates.value(Dates.Millisecond(w)) == 604800000
+    @test Dates.toms(h) == Dates.value(Dates.Millisecond(h)) == 3600000
+    @test Dates.toms(d) == Dates.value(Dates.Millisecond(d)) == 86400000
+    @test Dates.toms(w) == Dates.value(Dates.Millisecond(w)) == 604800000
 
     @test Dates.days(ms) == Dates.days(s) == Dates.days(mi) == Dates.days(h) == 0
     @test Dates.days(Dates.Millisecond(86400000)) == 1
@@ -347,13 +360,20 @@ end
     @test Dates.days(w) == 7
 end
 @testset "issue #9214" begin
-    @test 2s + (7ms + 1ms) == (2s + 7ms) + 1ms == 1ms + (2s + 7ms) == 1ms + (1s + 7ms) + 1s == 1ms + (2s + 3d + 7ms) + (-3d) == (1ms + (2s + 3d)) + (7ms - 3d) == (1ms + (2s + 3d)) - (3d - 7ms)
+    @test 2s + (7ms + 1ms) ==
+          (2s + 7ms) + 1ms ==
+          1ms + (2s + 7ms) ==
+          1ms + (1s + 7ms) + 1s ==
+          1ms + (2s + 3d + 7ms) + (-3d) ==
+          (1ms + (2s + 3d)) + (7ms - 3d) ==
+          (1ms + (2s + 3d)) - (3d - 7ms)
     @test 1ms - (2s + 7ms) == -((2s + 7ms) - 1ms) == (-6ms) - 2s
     @test emptyperiod == ((d + y) - y) - d == ((d + y) - d) - y
     @test emptyperiod == 2y + (m - d) + ms - ((m - d) + 2y + ms)
     @test emptyperiod == 0ms
     @test string(emptyperiod) == "empty period"
-    @test string(ms + mi + d + m + y + w + h + s + 2y + m) == "3 years, 2 months, 1 week, 1 day, 1 hour, 1 minute, 1 second, 1 millisecond"
+    @test string(ms + mi + d + m + y + w + h + s + 2y + m) ==
+          "3 years, 2 months, 1 week, 1 day, 1 hour, 1 minute, 1 second, 1 millisecond"
     @test 8d - s == 1w + 23h + 59mi + 59s
     @test h + 3mi == 63mi
     @test y - m == 11m
@@ -366,7 +386,8 @@ end
     @test isequal(d - h, 2d - 2h - 1d + 1h)
     @test sprint(show, y + m) == string(y + m)
     @test convert(Dates.CompoundPeriod, y) + m == y + m
-    @test Dates.periods(convert(Dates.CompoundPeriod, y)) == convert(Dates.CompoundPeriod, y).periods
+    @test Dates.periods(convert(Dates.CompoundPeriod, y)) ==
+          convert(Dates.CompoundPeriod, y).periods
 end
 @testset "compound period simplification" begin
     # reduce compound periods into the most basic form
@@ -374,78 +395,129 @@ end
     @test Dates.canonicalize(-h + mi).periods == Dates.Period[-59mi]
     @test Dates.canonicalize(-y + d).periods == Dates.Period[-y, d]
     @test Dates.canonicalize(-y + m - w + d).periods == Dates.Period[-11m, -6d]
-    @test Dates.canonicalize(-y + m - w + ms).periods == Dates.Period[-11m, -6d, -23h, -59mi, -59s, -999ms]
-    @test Dates.canonicalize(y - m + w - d + h - mi + s - ms).periods == Dates.Period[11m, 6d, 59mi, 999ms]
-    @test Dates.canonicalize(-y + m - w + d - h + mi - s + ms).periods == Dates.Period[-11m, -6d, -59mi, -999ms]
+    @test Dates.canonicalize(-y + m - w + ms).periods ==
+          Dates.Period[-11m, -6d, -23h, -59mi, -59s, -999ms]
+    @test Dates.canonicalize(y - m + w - d + h - mi + s - ms).periods ==
+          Dates.Period[11m, 6d, 59mi, 999ms]
+    @test Dates.canonicalize(-y + m - w + d - h + mi - s + ms).periods ==
+          Dates.Period[-11m, -6d, -59mi, -999ms]
 
-    @test Dates.Date(2009, 2, 1) - (Dates.Month(1) + Dates.Day(1)) == Dates.Date(2008, 12, 31)
-    @test_throws MethodError (Dates.Month(1) + Dates.Day(1)) - Dates.Date(2009,2,1)
+    @test Dates.Date(2009, 2, 1) - (Dates.Month(1) + Dates.Day(1)) ==
+          Dates.Date(2008, 12, 31)
+    @test_throws MethodError (Dates.Month(1) + Dates.Day(1)) - Dates.Date(2009, 2, 1)
 end
 
 @testset "canonicalize Period" begin
     # reduce individual Period into most basic CompoundPeriod
-    @test Dates.canonicalize(Dates.Nanosecond(1000000)) == Dates.canonicalize(Dates.Millisecond(1))
+    @test Dates.canonicalize(Dates.Nanosecond(1000000)) ==
+          Dates.canonicalize(Dates.Millisecond(1))
     @test Dates.canonicalize(Dates.Millisecond(1000)) == Dates.canonicalize(Dates.Second(1))
     @test Dates.canonicalize(Dates.Second(60)) == Dates.canonicalize(Dates.Minute(1))
     @test Dates.canonicalize(Dates.Minute(60)) == Dates.canonicalize(Dates.Hour(1))
     @test Dates.canonicalize(Dates.Hour(24)) == Dates.canonicalize(Dates.Day(1))
     @test Dates.canonicalize(Dates.Day(7)) == Dates.canonicalize(Dates.Week(1))
     @test Dates.canonicalize(Dates.Month(12)) == Dates.canonicalize(Dates.Year(1))
-    @test Dates.canonicalize(Dates.Minute(24*60*1 + 12*60)) == Dates.canonicalize(Dates.CompoundPeriod([Dates.Day(1),Dates.Hour(12)]))
+    @test Dates.canonicalize(Dates.Minute(24 * 60 * 1 + 12 * 60)) ==
+          Dates.canonicalize(Dates.CompoundPeriod([Dates.Day(1), Dates.Hour(12)]))
 end
 @testset "unary ops and vectorized period arithmetic" begin
     pa = [1y 1m 1w 1d; 1h 1mi 1s 1ms]
-    cpa = [1y + 1s 1m + 1s 1w + 1s 1d + 1s; 1h + 1s 1mi + 1s 2m + 1s 1s + 1ms]
+    cpa = [1y+1s 1m+1s 1w+1s 1d+1s; 1h+1s 1mi+1s 2m+1s 1s+1ms]
 
     @test +pa == pa == -(-pa)
     @test -pa == map(-, pa)
-    @test 1y .+ pa == [2y 1y + 1m 1y + 1w 1y + 1d; 1y + 1h 1y + 1mi 1y + 1s 1y + 1ms]
-    @test (1y + 1m) .+ pa == [2y + 1m 1y + 2m 1y + 1m + 1w 1y + 1m + 1d; 1y + 1m + 1h 1y + 1m + 1mi 1y + 1m + 1s 1y + 1m + 1ms]
-    @test pa .+ 1y == [2y 1y + 1m 1y + 1w 1y + 1d; 1y + 1h 1y + 1mi 1y + 1s 1y + 1ms]
-    @test pa .+ (1y + 1m) == [2y + 1m 1y + 2m 1y + 1m + 1w 1y + 1m + 1d; 1y + 1m + 1h 1y + 1m + 1mi 1y + 1m + 1s 1y + 1m + 1ms]
+    @test 1y .+ pa == [2y 1y+1m 1y+1w 1y+1d; 1y+1h 1y+1mi 1y+1s 1y+1ms]
+    @test (1y + 1m) .+ pa ==
+          [2y+1m 1y+2m 1y+1m+1w 1y+1m+1d; 1y+1m+1h 1y+1m+1mi 1y+1m+1s 1y+1m+1ms]
+    @test pa .+ 1y == [2y 1y+1m 1y+1w 1y+1d; 1y+1h 1y+1mi 1y+1s 1y+1ms]
+    @test pa .+ (1y + 1m) ==
+          [2y+1m 1y+2m 1y+1m+1w 1y+1m+1d; 1y+1m+1h 1y+1m+1mi 1y+1m+1s 1y+1m+1ms]
 
-    @test 1y .+ cpa == [2y + 1s 1y + 1m + 1s 1y + 1w + 1s 1y + 1d + 1s; 1y + 1h + 1s 1y + 1mi + 1s 1y + 2m + 1s 1y + 1ms + 1s]
-    @test (1y + 1m) .+ cpa == [2y + 1m + 1s 1y + 2m + 1s 1y + 1m + 1w + 1s 1y + 1m + 1d + 1s; 1y + 1m + 1h + 1s 1y + 1m + 1mi + 1s 1y + 3m + 1s 1y + 1m + 1s + 1ms]
-    @test cpa .+ 1y == [2y + 1s 1y + 1m + 1s 1y + 1w + 1s 1y + 1d + 1s; 1y + 1h + 1s 1y + 1mi + 1s 1y + 2m + 1s 1y + 1ms + 1s]
-    @test cpa .+ (1y + 1m) == [2y + 1m + 1s 1y + 2m + 1s 1y + 1m + 1w + 1s 1y + 1m + 1d + 1s; 1y + 1m + 1h + 1s 1y + 1m + 1mi + 1s 1y + 3m + 1s 1y + 1m + 1s + 1ms]
+    @test 1y .+ cpa ==
+          [2y+1s 1y+1m+1s 1y+1w+1s 1y+1d+1s; 1y+1h+1s 1y+1mi+1s 1y+2m+1s 1y+1ms+1s]
+    @test (1y + 1m) .+ cpa == [
+        2y+1m+1s 1y+2m+1s 1y+1m+1w+1s 1y+1m+1d+1s
+        1y+1m+1h+1s 1y+1m+1mi+1s 1y+3m+1s 1y+1m+1s+1ms
+    ]
+    @test cpa .+ 1y ==
+          [2y+1s 1y+1m+1s 1y+1w+1s 1y+1d+1s; 1y+1h+1s 1y+1mi+1s 1y+2m+1s 1y+1ms+1s]
+    @test cpa .+ (1y + 1m) == [
+        2y+1m+1s 1y+2m+1s 1y+1m+1w+1s 1y+1m+1d+1s
+        1y+1m+1h+1s 1y+1m+1mi+1s 1y+3m+1s 1y+1m+1s+1ms
+    ]
 
-    @test 1y .+ pa == [2y 1y + 1m 1y + 1w 1y + 1d; 1y + 1h 1y + 1mi 1y + 1s 1y + 1ms]
-    @test (1y + 1m) .+ pa == [2y + 1m 1y + 2m 1y + 1m + 1w 1y + 1m + 1d; 1y + 1m + 1h 1y + 1m + 1mi 1y + 1m + 1s 1y + 1m + 1ms]
-    @test pa .+ 1y == [2y 1y + 1m 1y + 1w 1y + 1d; 1y + 1h 1y + 1mi 1y + 1s 1y + 1ms]
-    @test pa .+ (1y + 1m) == [2y + 1m 1y + 2m 1y + 1m + 1w 1y + 1m + 1d; 1y + 1m + 1h 1y + 1m + 1mi 1y + 1m + 1s 1y + 1m + 1ms]
+    @test 1y .+ pa == [2y 1y+1m 1y+1w 1y+1d; 1y+1h 1y+1mi 1y+1s 1y+1ms]
+    @test (1y + 1m) .+ pa ==
+          [2y+1m 1y+2m 1y+1m+1w 1y+1m+1d; 1y+1m+1h 1y+1m+1mi 1y+1m+1s 1y+1m+1ms]
+    @test pa .+ 1y == [2y 1y+1m 1y+1w 1y+1d; 1y+1h 1y+1mi 1y+1s 1y+1ms]
+    @test pa .+ (1y + 1m) ==
+          [2y+1m 1y+2m 1y+1m+1w 1y+1m+1d; 1y+1m+1h 1y+1m+1mi 1y+1m+1s 1y+1m+1ms]
 
-    @test 1y .+ cpa == [2y + 1s 1y + 1m + 1s 1y + 1w + 1s 1y + 1d + 1s; 1y + 1h + 1s 1y + 1mi + 1s 1y + 2m + 1s 1y + 1ms + 1s]
-    @test (1y + 1m) .+ cpa == [2y + 1m + 1s 1y + 2m + 1s 1y + 1m + 1w + 1s 1y + 1m + 1d + 1s; 1y + 1m + 1h + 1s 1y + 1m + 1mi + 1s 1y + 3m + 1s 1y + 1m + 1s + 1ms]
-    @test cpa .+ 1y == [2y + 1s 1y + 1m + 1s 1y + 1w + 1s 1y + 1d + 1s; 1y + 1h + 1s 1y + 1mi + 1s 1y + 2m + 1s 1y + 1ms + 1s]
-    @test cpa .+ (1y + 1m) == [2y + 1m + 1s 1y + 2m + 1s 1y + 1m + 1w + 1s 1y + 1m + 1d + 1s; 1y + 1m + 1h + 1s 1y + 1m + 1mi + 1s 1y + 3m + 1s 1y + 1m + 1s + 1ms]
+    @test 1y .+ cpa ==
+          [2y+1s 1y+1m+1s 1y+1w+1s 1y+1d+1s; 1y+1h+1s 1y+1mi+1s 1y+2m+1s 1y+1ms+1s]
+    @test (1y + 1m) .+ cpa == [
+        2y+1m+1s 1y+2m+1s 1y+1m+1w+1s 1y+1m+1d+1s
+        1y+1m+1h+1s 1y+1m+1mi+1s 1y+3m+1s 1y+1m+1s+1ms
+    ]
+    @test cpa .+ 1y ==
+          [2y+1s 1y+1m+1s 1y+1w+1s 1y+1d+1s; 1y+1h+1s 1y+1mi+1s 1y+2m+1s 1y+1ms+1s]
+    @test cpa .+ (1y + 1m) == [
+        2y+1m+1s 1y+2m+1s 1y+1m+1w+1s 1y+1m+1d+1s
+        1y+1m+1h+1s 1y+1m+1mi+1s 1y+3m+1s 1y+1m+1s+1ms
+    ]
 
     @test 1y .- pa == [0y 1y-1m 1y-1w 1y-1d; 1y-1h 1y-1mi 1y-1s 1y-1ms]
-    @test (1y + 1m) .- pa == [1m 1y 1y + 1m-1w 1y + 1m-1d; 1y + 1m-1h 1y + 1m-1mi 1y + 1m-1s 1y + 1m-1ms]
-    @test pa .- (1y + 1m) == [-1m -1y -1y-1m + 1w -1y-1m + 1d; -1y-1m + 1h -1y-1m + 1mi -1y-1m + 1s -1y-1m + 1ms]
-    @test pa .- 1y == [0y 1m-1y -1y + 1w -1y + 1d; -1y + 1h -1y + 1mi -1y + 1s -1y + 1ms]
+    @test (1y + 1m) .- pa ==
+          [1m 1y 1y+1m-1w 1y+1m-1d; 1y+1m-1h 1y+1m-1mi 1y+1m-1s 1y+1m-1ms]
+    @test pa .- (1y + 1m) ==
+          [-1m -1y -1y-1m+1w -1y-1m+1d; -1y-1m+1h -1y-1m+1mi -1y-1m+1s -1y-1m+1ms]
+    @test pa .- 1y == [0y 1m-1y -1y+1w -1y+1d; -1y+1h -1y+1mi -1y+1s -1y+1ms]
 
-    @test 1y .- cpa == [-1s 1y-1m-1s 1y-1w-1s 1y-1d-1s; 1y-1h-1s 1y-1mi-1s 1y-2m-1s 1y-1ms-1s]
-    @test (1y + 1m) .- cpa == [1m-1s 1y-1s 1y + 1m-1w-1s 1y + 1m-1d-1s; 1y + 1m-1h-1s 1y + 1m-1mi-1s 1y-1m-1s 1y + 1m-1s-1ms]
-    @test cpa .- 1y == [1s -1y + 1m + 1s -1y + 1w + 1s -1y + 1d + 1s; -1y + 1h + 1s -1y + 1mi + 1s -1y + 2m + 1s -1y + 1ms + 1s]
-    @test cpa .- (1y + 1m) == [-1m + 1s -1y + 1s -1y-1m + 1w + 1s -1y-1m + 1d + 1s; -1y-1m + 1h + 1s -1y-1m + 1mi + 1s -1y + 1m + 1s -1y + -1m + 1s + 1ms]
+    @test 1y .- cpa ==
+          [-1s 1y-1m-1s 1y-1w-1s 1y-1d-1s; 1y-1h-1s 1y-1mi-1s 1y-2m-1s 1y-1ms-1s]
+    @test (1y + 1m) .- cpa == [
+        1m-1s 1y-1s 1y+1m-1w-1s 1y+1m-1d-1s
+        1y+1m-1h-1s 1y+1m-1mi-1s 1y-1m-1s 1y+1m-1s-1ms
+    ]
+    @test cpa .- 1y ==
+          [1s -1y+1m+1s -1y+1w+1s -1y+1d+1s; -1y+1h+1s -1y+1mi+1s -1y+2m+1s -1y+1ms+1s]
+    @test cpa .- (1y + 1m) == [
+        -1m+1s -1y+1s -1y-1m+1w+1s -1y-1m+1d+1s
+        -1y-1m+1h+1s -1y-1m+1mi+1s -1y+1m+1s -1y+-1m+1s+1ms
+    ]
 
-    @test [1y 1m; 1w 1d] + [1h 1mi; 1s 1ms] == [1y + 1h 1m + 1mi; 1w + 1s 1d + 1ms]
+    @test [1y 1m; 1w 1d] + [1h 1mi; 1s 1ms] == [1y+1h 1m+1mi; 1w+1s 1d+1ms]
     @test [1y 1m; 1w 1d] - [1h 1mi; 1s 1ms] == [1y-1h 1m-1mi; 1w-1s 1d-1ms]
-    @test [1y 1m; 1w 1d] - [1h 1mi; 1s 1ms] - [1y-1h 1m-1mi; 1w-1s 1d-1ms] == [emptyperiod emptyperiod; emptyperiod emptyperiod]
+    @test [1y 1m; 1w 1d] - [1h 1mi; 1s 1ms] - [1y-1h 1m-1mi; 1w-1s 1d-1ms] ==
+          [emptyperiod emptyperiod; emptyperiod emptyperiod]
 
-    @test [1y + 1s 1m + 1s; 1w + 1s 1d + 1s] + [1h 1mi; 1s 1ms] == [1y + 1h + 1s 1m + 1mi + 1s; 1w + 2s 1d + 1s + 1ms]
-    @test [1y + 1s 1m + 1s; 1w + 1s 1d + 1s] - [1h 1mi; 1s 1ms] == [1y-1h + 1s 1m-1mi + 1s; 1w 1d + 1s-1ms]
+    @test [1y+1s 1m+1s; 1w+1s 1d+1s] + [1h 1mi; 1s 1ms] ==
+          [1y+1h+1s 1m+1mi+1s; 1w+2s 1d+1s+1ms]
+    @test [1y+1s 1m+1s; 1w+1s 1d+1s] - [1h 1mi; 1s 1ms] ==
+          [1y-1h+1s 1m-1mi+1s; 1w 1d+1s-1ms]
 
-    @test [1y 1m; 1w 1d] + [1h + 1s 1mi + 1s; 1m + 1s 1s + 1ms] == [1y + 1h + 1s 1m + 1mi + 1s; 1w + 1m + 1s 1d + 1s + 1ms]
-    @test [1y 1m; 1w 1d] - [1h + 1s 1mi + 1s; 1m + 1s 1s + 1ms] == [1y-1h-1s 1m-1mi-1s; 1w-1m-1s 1d-1s-1ms]
+    @test [1y 1m; 1w 1d] + [1h+1s 1mi+1s; 1m+1s 1s+1ms] ==
+          [1y+1h+1s 1m+1mi+1s; 1w+1m+1s 1d+1s+1ms]
+    @test [1y 1m; 1w 1d] - [1h+1s 1mi+1s; 1m+1s 1s+1ms] ==
+          [1y-1h-1s 1m-1mi-1s; 1w-1m-1s 1d-1s-1ms]
 
-    @test [1y + 1s 1m + 1s; 1w + 1s 1d + 1s] + [1y + 1h 1y + 1mi; 1y + 1s 1y + 1ms] == [2y + 1h + 1s 1y + 1m + 1mi + 1s; 1y + 1w + 2s 1y + 1d + 1s + 1ms]
-    @test [1y + 1s 1m + 1s; 1w + 1s 1d + 1s] - [1y + 1h 1y + 1mi; 1y + 1s 1y + 1ms] == [1s-1h 1m + 1s-1y-1mi; 1w-1y 1d + 1s-1y-1ms]
+    @test [1y+1s 1m+1s; 1w+1s 1d+1s] + [1y+1h 1y+1mi; 1y+1s 1y+1ms] ==
+          [2y+1h+1s 1y+1m+1mi+1s; 1y+1w+2s 1y+1d+1s+1ms]
+    @test [1y+1s 1m+1s; 1w+1s 1d+1s] - [1y+1h 1y+1mi; 1y+1s 1y+1ms] ==
+          [1s-1h 1m+1s-1y-1mi; 1w-1y 1d+1s-1y-1ms]
 end
 @testset "Equality and hashing between FixedPeriod types" begin
-    let types = (Dates.Week, Dates.Day, Dates.Hour, Dates.Minute,
-                 Dates.Second, Dates.Millisecond, Dates.Microsecond, Dates.Nanosecond)
-        for i in 1:length(types), j in i:length(types), x in (0, 1, 235, -4677, 15250)
+    let types = (
+            Dates.Week,
+            Dates.Day,
+            Dates.Hour,
+            Dates.Minute,
+            Dates.Second,
+            Dates.Millisecond,
+            Dates.Microsecond,
+            Dates.Nanosecond,
+        )
+        for i = 1:length(types), j = i:length(types), x in (0, 1, 235, -4677, 15250)
             local T, U, y, z
             T = types[i]
             U = types[j]
@@ -483,19 +555,35 @@ end
         @test isequal(y, x)
         @test hash(x) == hash(y)
     end
-    for FP = (Dates.Week, Dates.Day, Dates.Hour, Dates.Minute,
-              Dates.Second, Dates.Millisecond, Dates.Microsecond, Dates.Nanosecond)
-        for OP = (Dates.Year, Dates.Quarter, Dates.Month)
+    for FP in (
+        Dates.Week,
+        Dates.Day,
+        Dates.Hour,
+        Dates.Minute,
+        Dates.Second,
+        Dates.Millisecond,
+        Dates.Microsecond,
+        Dates.Nanosecond,
+    )
+        for OP in (Dates.Year, Dates.Quarter, Dates.Month)
             test_hash_equality(FP(0), OP(0))
         end
     end
 end
 @testset "Hashing for CompoundPeriod (#37447)" begin
-    periods = [Dates.Year(0), Dates.Minute(0), Dates.Second(0), Dates.CompoundPeriod(),
-               Dates.Minute(2), Dates.Second(120), Dates.CompoundPeriod(Dates.Minute(2)),
-               Dates.CompoundPeriod(Dates.Second(120)), Dates.CompoundPeriod(Dates.Minute(1), Dates.Second(60))]
-    for x = periods, y = periods
-        @test isequal(x,y) == (hash(x) == hash(y))
+    periods = [
+        Dates.Year(0),
+        Dates.Minute(0),
+        Dates.Second(0),
+        Dates.CompoundPeriod(),
+        Dates.Minute(2),
+        Dates.Second(120),
+        Dates.CompoundPeriod(Dates.Minute(2)),
+        Dates.CompoundPeriod(Dates.Second(120)),
+        Dates.CompoundPeriod(Dates.Minute(1), Dates.Second(60)),
+    ]
+    for x in periods, y in periods
+        @test isequal(x, y) == (hash(x) == hash(y))
     end
 end
 
@@ -509,13 +597,13 @@ end
     #tests for allowed comparisons
     #FixedPeriod
     @test (h - ms < h + ns) == true
-    @test (h + ns < h -ms) == false
-    @test (h  < h -ms) == false
-    @test (h-ms  < h) == true
+    @test (h + ns < h - ms) == false
+    @test (h < h - ms) == false
+    @test (h - ms < h) == true
     #OtherPeriod
-    @test (2y-m < 25m+1y) == true
-    @test (2y < 25m+1y) == true
-    @test (25m+1y < 2y) == false
+    @test (2y - m < 25m + 1y) == true
+    @test (2y < 25m + 1y) == true
+    @test (25m + 1y < 2y) == false
     #Test combined Fixed and Other Periods
     @test (1m + 1d < 1m + 1s) == false
 end
@@ -533,4 +621,3 @@ end
 end
 
 end
-

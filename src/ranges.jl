@@ -20,4 +20,3 @@ function len(a, b, c)
     end
     return i - 1
 end
-

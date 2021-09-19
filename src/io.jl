@@ -22,7 +22,7 @@ function tryparsenext end
 
 
 # Information for parsing and formatting date time values.
-struct PeriodFormat{S, T<:Tuple}
+struct PeriodFormat{S,T<:Tuple}
     tokens::T
 end
 
@@ -36,13 +36,13 @@ end
 @inline min_width(d::PeriodPart) = d.fixed ? d.width : 1
 @inline max_width(d::PeriodPart) = d.fixed ? d.width : 0
 
-function _show_content(io::IO, d::PeriodPart{c}) where c
+function _show_content(io::IO, d::PeriodPart{c}) where {c}
     for i = 1:d.width
         print(io, c)
     end
 end
 
-function Base.show(io::IO, d::PeriodPart{c}) where c
+function Base.show(io::IO, d::PeriodPart{c}) where {c}
     print(io, "PeriodPart(")
     _show_content(io, d)
     print(io, ")")
@@ -86,14 +86,14 @@ end
 
 ### Delimiters
 
-struct Delim{T, length} <: AbstractPeriodToken
+struct Delim{T,length} <: AbstractPeriodToken
     d::T
 end
 
-Delim(d::T) where {T<:AbstractChar} = Delim{T, 1}(d)
-Delim(d::String) = Delim{String, length(d)}(d)
+Delim(d::T) where {T<:AbstractChar} = Delim{T,1}(d)
+Delim(d::String) = Delim{String,length(d)}(d)
 
-@inline function tryparsenext(d::Delim{<:AbstractChar, N}, str, i::Int, len) where N
+@inline function tryparsenext(d::Delim{<:AbstractChar,N}, str, i::Int, len) where {N}
     for j = 1:N
         i > len && return nothing
         next = iterate(str, i)
@@ -104,7 +104,7 @@ Delim(d::String) = Delim{String, length(d)}(d)
     return true, i
 end
 
-@inline function tryparsenext(d::Delim{String, N}, str, i::Int, len) where N
+@inline function tryparsenext(d::Delim{String,N}, str, i::Int, len) where {N}
     i1 = i
     i2 = firstindex(d.d)
     for j = 1:N
@@ -128,7 +128,7 @@ end
     print(io, d.d)
 end
 
-function _show_content(io::IO, d::Delim{<:AbstractChar, N}) where N
+function _show_content(io::IO, d::Delim{<:AbstractChar,N}) where {N}
     if d.d in keys(CONVERSION_SPECIFIERS)
         for i = 1:N
             print(io, '\\', d.d)
@@ -161,7 +161,7 @@ abstract type DayOfWeekToken end # special addition to Period types
 
 # Map conversion specifiers or character codes to tokens.
 # Note: Allow addition of new character codes added by packages
-const CONVERSION_SPECIFIERS = Dict{Char, Type}(
+const CONVERSION_SPECIFIERS = Dict{Char,Type}(
     'y' => Dates.Year,
     's' => Semester,
     'q' => Dates.Quarter,
@@ -175,7 +175,7 @@ const CONVERSION_SPECIFIERS = Dict{Char, Type}(
 # Default values are needed when a conversion specifier is used in a DateFormat for parsing
 # and we have reached the end of the input string.
 # Note: Allow `Any` value as a default to support extensibility
-const CONVERSION_DEFAULTS = IdDict{Type, Any}(
+const CONVERSION_DEFAULTS = IdDict{Type,Any}(
     Dates.Year => Int64(1),
     Semester => Int64(1),
     Dates.Quarter => Int64(1),
@@ -186,7 +186,7 @@ const CONVERSION_DEFAULTS = IdDict{Type, Any}(
 
 # Specifies the required fields in order to parse a TimeType
 # Note: Allows for addition of new TimeTypes
-const CONVERSION_TRANSLATIONS = IdDict{Type, Any}(
+const CONVERSION_TRANSLATIONS = IdDict{Type,Any}(
     Dates.Year => (Dates.Year),
     Semester => (Dates.Year, Semester),
     Dates.Quarter => (Dates.Year, Dates.Quarter),
@@ -300,7 +300,7 @@ default_format(::Type{Month}) = MonthFormat
 default_format(::Type{Week}) = WeekFormat
 default_format(::Type{Day}) = DayFormat
 default_format(::Type{Undated}) = UndatedFormat
- 
+
 # Standard formats
 
 """
@@ -408,9 +408,10 @@ repeatedly parsing similarly formatted period strings with a pre-created
 Period(p::AbstractString, pf::PeriodFormat) = parse(Period, p, pf)
 
 
-for TP in (:YearDate, :SemesterDate, :QuarterDate, :MonthDate, :WeekDate, :DayDate, :UndatedDate)
+for TP in
+    (:YearDate, :SemesterDate, :QuarterDate, :MonthDate, :WeekDate, :DayDate, :UndatedDate)
     @eval begin
-        @generated function format(io::IO, p::$TP, fmt::PeriodFormat{<:Any,T}) where T
+        @generated function format(io::IO, p::$TP, fmt::PeriodFormat{<:Any,T}) where {T}
             N = fieldcount(T)
             quote
                 ts = fmt.tokens
@@ -418,11 +419,11 @@ for TP in (:YearDate, :SemesterDate, :QuarterDate, :MonthDate, :WeekDate, :DayDa
             end
         end
 
-        function format(p::$TP, fmt::PeriodFormat, bufsize=10)
-        # preallocate to reduce resizing
-            io = IOBuffer(Vector{UInt8}(undef, bufsize), read=true, write=true)
+        function format(p::$TP, fmt::PeriodFormat, bufsize = 10)
+            # preallocate to reduce resizing
+            io = IOBuffer(Vector{UInt8}(undef, bufsize), read = true, write = true)
             format(io, p, fmt)
-            String(io.data[1:io.ptr - 1])
+            String(io.data[1:io.ptr-1])
         end
     end
 end
@@ -490,10 +491,9 @@ end
 function Base.print(io::IO, dd::DayDate)
     # don't use format - bypassing IOBuffer creation
     # saves a bit of time here.
-    y,m,d = yearmonthday(value(dd))
+    y, m, d = yearmonthday(value(dd))
     yy = y < 0 ? @sprintf("%05i", y) : lpad(y, 4, "0")
     mm = lpad(m, 2, "0")
     dd = lpad(d, 2, "0")
     print(io, "$yy-$mm-$dd")
 end
-

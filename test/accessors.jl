@@ -13,14 +13,14 @@ using Test
     @test Periods.semester(-1) == 2
     @test Periods.quarter(-1) == 4
     @test Periods.month(-1) == 12
-#    @test Periods.week(-1) == 52 # 0 and negative days not working !!
+    #    @test Periods.week(-1) == 52 # 0 and negative days not working !!
     @test Periods.day(-1) == 30
 
     @test Periods.year(0) == 0
     @test Periods.semester(0) == 2
     @test Periods.quarter(0) == 4
     @test Periods.month(0) == 12
-#    @test Periods.week(0) == 52 # 0 and negative days not working !!
+    #    @test Periods.week(0) == 52 # 0 and negative days not working !!
     @test Periods.day(0) == 31
 
     @test Periods.year(1) == 1
@@ -36,20 +36,20 @@ using Test
 end
 
 @testset "year, month, day, hour, minute, second over many years" begin
-    let from=1, to=2, y=0, s=0, q=0, m=0, w=1, d=0
+    let from = 1, to = 2, y = 0, s = 0, q = 0, m = 0, w = 1, d = 0
         dd = Dates.dayofweek(Dates.Date(from, 1, 1))
-        for y in from:to
+        for y = from:to
             maxweek = Periods.weeksinyear(y)
             for m = 1:12
                 for d = 1:Dates.daysinmonth(y, m)
                     dt = Periods.Day(y, m, d)
                     s = div(rem(m - 1, 12), 6) + 1
-                    q  = div(rem(m - 1, 12), 3) + 1
+                    q = div(rem(m - 1, 12), 3) + 1
                     @test y == Periods.year(dt)
                     @test m == Periods.month(dt)
                     @test d == Periods.day(dt)
                     @test s == Periods.semester(dt)
-                    @test q  == Periods.quarter(dt)
+                    @test q == Periods.quarter(dt)
                     @test w == Periods.week(dt)
                     if dd > 6
                         w = (w + 1 > maxweek) ? 1 : w + 1

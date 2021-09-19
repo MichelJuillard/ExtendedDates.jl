@@ -7,7 +7,8 @@ using Dates
 
 @testset "conversion to/from UNIX" begin
     # Test conversion to and from unix
-    @test Dates.unix2datetime(Dates.datetime2unix(DateTime(2000, 1, 1))) == DateTime(2000, 1, 1)
+    @test Dates.unix2datetime(Dates.datetime2unix(DateTime(2000, 1, 1))) ==
+          DateTime(2000, 1, 1)
     @test Dates.value(Dates.DateTime(1970)) == Dates.UNIXEPOCH
 
     # Tests from here: https://en.wikipedia.org/wiki/Unix_time
@@ -66,7 +67,14 @@ end
     @test abs(Dates.now() - now(Dates.UTC)) < Dates.Hour(16)
 end
 @testset "Issue #9171, #9169" begin
-    let t = Dates.Period[Dates.Week(2), Dates.Day(14), Dates.Hour(14 * 24), Dates.Minute(14 * 24 * 60), Dates.Second(14 * 24 * 60 * 60), Dates.Millisecond(14 * 24 * 60 * 60 * 1000)]
+    let t = Dates.Period[
+            Dates.Week(2),
+            Dates.Day(14),
+            Dates.Hour(14 * 24),
+            Dates.Minute(14 * 24 * 60),
+            Dates.Second(14 * 24 * 60 * 60),
+            Dates.Millisecond(14 * 24 * 60 * 60 * 1000),
+        ]
         for i = 1:length(t)
             Pi = typeof(t[i])
             for j = 1:length(t)
