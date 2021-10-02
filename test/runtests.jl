@@ -2,12 +2,10 @@
 
 module DateTests
 
-include("adjusters.jl")
+#include("periods.jl")
 
-#=
 for file in readlines(joinpath(@__DIR__, "testgroups"))
     include(file * ".jl")
 end
-=#
 
 end

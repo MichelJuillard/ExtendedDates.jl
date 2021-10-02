@@ -1,3 +1,17 @@
+# Adding Semester to Date.DatePeriod
+struct Semester <: Dates.DatePeriod
+    value::Int64
+    Semester(v::Number) = new(v)
+end
+
+# Adding Undated to Dates.DatePeriod
+struct Undated <: Dates.DatePeriod
+    value::Int64
+    Undated(v::Number) = new(v)
+end
+value(d::Semester) = d.value
+value(d::Undated) = d.value
+
 abstract type SimpleDate <: Dates.TimeType end
 
 SIMPLEPERIODS = (:Year, :Semester, :Quarter, :Month, :Week, :Day, :Undated)
@@ -5,8 +19,9 @@ SIMPLEPERIODS = (:Year, :Semester, :Quarter, :Month, :Week, :Day, :Undated)
 # weeks computations
 function week_per_year()
     weeks = Dict()
+    weeks[0] = Dict([("max_weeks", 52), ("cum_weeks", 0)])
     cummulativeweeks = 0
-    for y = 0:2500
+    for y = 1:2500
         w = Dates.week(Dates.Date(y, 12, 28))
         cummulativeweeks += w
         weeks[y] = Dict([("max_weeks", w), ("cum_weeks", cummulativeweeks)])
@@ -19,9 +34,9 @@ if !@isdefined WEEKTABLE
 end
 
 """
-    localUTInstant{T}
+    UTInstant{T}
 
-The `localUTInstant` represents a machine timeline based on UT time (1 day = one revolution of
+The `UTInstant` represents a machine timeline based on UT time (1 day = one revolution of
 the earth). The `T` is a `Period` parameter that indicates the resolution or precision of
 the instant.
 """
@@ -57,16 +72,19 @@ for (T1, T2) in ((:Semester, :SemesterDate), (:Undated, :UndatedDate))
     end
 end
 
-
+DAYMULTIPLEDATE = Union{DayDate,WeekDate}
+DAYMULTIPLEPERIOD = Union{Day,Week}
+MONTHMULTIPLEDATE = Union{MonthDate,QuarterDate,SemesterDate,YearDate}
+MONTHMULTIPLEPERIOD = Union{Month,Quarter,Semester,Year}
 
 # Convenience default constructors
 UTY(x) = Dates.UTInstant(Dates.Year(x))
-UTS(x) = localUTInstant(Semester(x))
+UTS(x) = UTInstant(Semester(x))
 UTQ(x) = Dates.UTInstant(Dates.Quarter(x))
 UTM(x) = Dates.UTInstant(Dates.Month(x))
 UTW(x) = Dates.UTInstant(Dates.Week(x))
 UTD(x) = Dates.UTInstant(Dates.Day(x))
-UTU(x) = localUTInstant(Undated(x))
+UTU(x) = UTInstant(Undated(x))
 
 """
     argerror([msg]) -> Union{ArgumentError, Nothing}
@@ -80,12 +98,12 @@ argerror() = nothing
 ### CONSTRUCTORS ###
 # Core constructors
 """
-    Year(y) -> Year
+    YearDate(y) -> Year
 
-Construct a `Year` type. Argument must be convertible to [`Int64`](@ref).
+Construct a `YearDate` type. Argument must be convertible to [`Int64`](@ref).
 """
-function Year(y::Int64)
-    return Year(UTY(yearfromepoch(y)))
+function YearDate(y::Int64)
+    return YearDate(UTY(yearfromepoch(y)))
 end
 
 function yearfromepoch(y)
@@ -93,14 +111,14 @@ function yearfromepoch(y)
 end
 
 """
-    Semester(y, [q]) -> Quarter
+    SemesterDate(y, [q]) -> SemesterDate
 
-Construct a `Semester` type by parts. Arguments must be convertible to [`Int64`](@ref).
+Construct a `SemesterDate` type by parts. Arguments must be convertible to [`Int64`](@ref).
 """
-function Semester(y::Int64, s::Int64 = 1)
+function SemesterDate(y::Int64, s::Int64 = 1)
     err = validargs(Semester, y, s)
     err === nothing || throw(err)
-    return Semester(UTS(totalsemesters(y, s)))
+    return SemesterDate(UTS(totalsemesters(y, s)))
 end
 
 function validargs(::Type{Semester}, y::Int64, s::Int64)
@@ -113,14 +131,14 @@ function totalsemesters(y, s)
 end
 
 """
-    Quarter(y, [q]) -> Quarter
+    QuarterDate(y, [q]) -> QuarterDate
 
-Construct a `Quarter` type by parts. Arguments must be convertible to [`Int64`](@ref).
+Construct a `QuarterDate` type by parts. Arguments must be convertible to [`Int64`](@ref).
 """
-function Quarter(y::Int64, q::Int64 = 1)
+function QuarterDate(y::Int64, q::Int64 = 1)
     err = validargs(Quarter, y, q)
     err === nothing || throw(err)
-    return Quarter(UTQ(totalquarters(y, q)))
+    return QuarterDate(UTQ(totalquarters(y, q)))
 end
 
 function validargs(::Type{Quarter}, y::Int64, q::Int64)
@@ -133,14 +151,14 @@ function totalquarters(y, q)
 end
 
 """
-    Month(y, [m]) -> Month
+    MonthDate(y, [m]) -> MonthDate
 
-Construct a `Month` type by parts. Arguments must be convertible to [`Int64`](@ref).
+Construct a `MonthDate` type by parts. Arguments must be convertible to [`Int64`](@ref).
 """
-function Month(y::Int64, m::Int64 = 1)
+function MonthDate(y::Int64, m::Int64 = 1)
     err = validargs(Month, y, m)
     err === nothing || throw(err)
-    return Month(UTM(totalmonths(y, m)))
+    return MonthDate(UTM(totalmonths(y, m)))
 end
 
 function validargs(::Type{Month}, y::Int64, m::Int64)
@@ -153,19 +171,19 @@ function totalmonths(y, m)
 end
 
 """
-    Week(y, [w]) -> Week
+    WeekDate(y, [w]) -> WeekDate
 
-Construct a `Week` type by parts. Arguments must be convertible to [`Int64`](@ref).
+Construct a `WeekDate` type by parts. Arguments must be convertible to [`Int64`](@ref).
 """
-function Week(y::Int64, w::Int64 = 1)
+function WeekDate(y::Int64, w::Int64 = 1)
     err = validargs(Week, y, w)
     err === nothing || throw(err)
-    return Week(UTW(totalweeks(y, w)))
+    return WeekDate(UTW(totalweeks(y, w)))
 end
 
 function validargs(::Type{Week}, y::Int64, w::Int64)
     0 < y < 2500 || return argerror("Week: $y out of range (0:2500)")
-    0 < w < 53 || return argerror("Week: $w out of range (1:53)")
+    0 < w < 54 || return argerror("Week: $w out of range (1:53)")
     return argerror()
 end
 
@@ -174,24 +192,24 @@ function totalweeks(y, w)
 end
 
 """
-    Day(y, [m, d]) -> Day
+    DayDate(y, [m, d]) -> DayDate
 
-Construct a `Day` type by parts. Arguments must be convertible to [`Int64`](@ref).
-A `Day``is identical to  a `Dates.Date`
+Construct a `DayDate` type by parts. Arguments must be convertible to [`Int64`](@ref).
+A `DayDate``is identical to  a `Dates.Date`
 """
-function Day(y::Int64, m::Int64 = 1, d::Int64 = 1)
+function DayDate(y::Int64, m::Int64 = 1, d::Int64 = 1)
     err = Dates.validargs(Dates.Date, y, m, d)
     err === nothing || throw(err)
-    return Day(Dates.UTD(Dates.totaldays(y, m, d)))
+    return DayDate(Dates.UTD(Dates.totaldays(y, m, d)))
 end
 
 """
-    Undated(u) -> Undated
+    UndatedDate(u) -> UndatedDate
 
-Construct a `Undated` type. Argument must be convertible to [`Int64`](@ref).
+Construct a `UndatedDate` type. Argument must be convertible to [`Int64`](@ref).
 """
-function Undated(u::Int64)
-    return Undated(UTU(u))
+function UndatedDate(u::Int64)
+    return UndatedDate(UTU(u))
 end
 
 # Using Dates.Periods
@@ -202,7 +220,7 @@ WeekDate(y::Dates.Year, w::Dates.Week = Dates.Week(1)) =
 MonthDate(y::Dates.Year, m::Dates.Month = Dates.Month(1)) =
     MonthDate.(Dates.value(y), Dates.value(m))
 QuarterDate(y::Dates.Year, q::Dates.Quarter = Dates.Quarter(1)) =
-    Date.Quarter(Dates.value(y), Dates.value(q))
+    QuarterDate(Dates.value(y), Dates.value(q))
 SemesterDate(y::Dates.Year, s::Semester = Semester(1)) =
     SemesterDate(Dates.value(y), Dates.value(s))
 YearDate(y::Dates.Year) = YearDate(Dates.value(y))
@@ -221,40 +239,40 @@ function SemesterDate(period::Dates.Period, periods::Dates.Period...)
         isa(p, Dates.Year) && (y = p::Dates.Year)
         isa(p, Semester) && (s = p::Semester)
     end
-    return Semester(y, s)
+    return SemesterDate(y, s)
 end
 
-function Quarter(period::Dates.Period, periods::Dates.Period...)
+function QuarterDate(period::Dates.Period, periods::Dates.Period...)
     y = Dates.Year(1)
     q = Dates.Quarter(1)
     for p in (period, periods...)
         isa(p, Dates.Year) && (y = p::Dates.Year)
         isa(p, Dates.Quarter) && (q = p::Dates.Quarter)
     end
-    return Quarter(y, q)
+    return QuarterDate(y, q)
 end
 
-function Month(period::Dates.Period, periods::Dates.Period...)
+function MonthDate(period::Dates.Period, periods::Dates.Period...)
     y = Dates.Year(1)
     m = Dates.Month(1)
     for p in (period, periods...)
         isa(p, Dates.Year) && (y = p::Dates.Year)
         isa(p, Dates.Month) && (m = p::Dates.Month)
     end
-    return Month(y, m)
+    return MonthDate(y, m)
 end
 
-function Week(period::Dates.Period, periods::Dates.Period...)
+function WeekDate(period::Dates.Period, periods::Dates.Period...)
     y = Dates.Year(1)
     w = Dates.Week(1)
     for p in (period, periods...)
         isa(p, Dates.Year) && (y = p::Dates.Year)
         isa(p, Dates.Week) && (w = p::Dates.Week)
     end
-    return Week(y, w)
+    return WeekDate(y, w)
 end
 
-function Day(period::Dates.Period, periods::Dates.Period...)
+function DayDate(period::Dates.Period, periods::Dates.Period...)
     y = Dates.Year(1)
     m = Dates.Month(1)
     d = Dates.Day(1)
@@ -263,17 +281,17 @@ function Day(period::Dates.Period, periods::Dates.Period...)
         isa(p, Dates.Month) && (m = p::Dates.Month)
         isa(p, Dates.Day) && (d = p::Dates.Day)
     end
-    return Day(y, m, d)
+    return DayDate(y, m, d)
 end
 
 # Fallback constructors
-Year(y) = Year(Int64(y))
-Semester(y, s = 1) = Semester(Int64(y), Int64(s))
-Quarter(y, q = 1) = Quarter(Int64(y), Int64(q))
-Month(y, m = 1) = Month(Int64(y), Int64(m))
-Week(y, w = 1) = Week(Int64(y), Int64(w))
-Day(y, m = 1, d = 1) = Day(Int64(y), Int64(m), Int64(d))
-Undated(y) = Undated(Int64(y))
+YearDate(y) = YearDate(Int64(y))
+SemesterDate(y, s = 1) = SemesterDate(Int64(y), Int64(s))
+QuarterDate(y, q = 1) = QuarterDate(Int64(y), Int64(q))
+MonthDate(y, m = 1) = MonthDate(Int64(y), Int64(m))
+WeekDate(y, w = 1) = WeekDate(Int64(y), Int64(w))
+DayDate(y, m = 1, d = 1) = DayDate(Int64(y), Int64(m), Int64(d))
+UndatedDate(y) = UndatedDate(Int64(y))
 
 # Traits, Equality
 Base.isfinite(::Union{Type{T},T}) where {T<:SimpleDate} = true
@@ -331,20 +349,20 @@ Base.zero(::Type{DayDate}) = Dates.Day(0)
 Base.zero(::Type{UndatedDate}) = Int64(0)
 Base.zero(::T) where {T<:SimpleDate} = zero(T)::Dates.Period
 
-Base.typemax(::Union{YearDate,Type{YearDate}}) = Year(252522163911149)
-Base.typemin(::Union{YearDate,Type{YearDate}}) = Year(-252522163911150)
-Base.typemax(::Union{SemesterDate,Type{SemesterDate}}) = Semester(252522163911149, 2)
-Base.typemin(::Union{SemesterDate,Type{SemesterDate}}) = Semester(-252522163911150, 1)
-Base.typemax(::Union{QuarterDate,Type{QuarterDate}}) = Quarter(252522163911149, 4)
-Base.typemin(::Union{QuarterDate,Type{QuarterDate}}) = Quarter(-252522163911150, 1)
-Base.typemax(::Union{MonthDate,Type{MonthDate}}) = Month(252522163911149, 12)
-Base.typemin(::Union{MonthDate,Type{MonthDate}}) = Month(-252522163911150, 1)
-Base.typemax(::Union{WeekDate,Type{WeekDate}}) = Week(252522163911149, 52)
-Base.typemin(::Union{WeekDate,Type{WeekDate}}) = Week(-252522163911150, 1)
-Base.typemax(::Union{DayDate,Type{DayDate}}) = Day(252522163911149, 12, 31)
-Base.typemin(::Union{DayDate,Type{DayDate}}) = Day(-252522163911150, 1, 1)
-Base.typemax(::Union{UndatedDate,Type{UndatedDate}}) = Undated(typemax(UInt64))
-Base.typemin(::Union{UndatedDate,Type{UndatedDate}}) = Undated(0)
+Base.typemax(::Union{YearDate,Type{YearDate}}) = YearDate(252522163911149)
+Base.typemin(::Union{YearDate,Type{YearDate}}) = YearDate(-252522163911150)
+Base.typemax(::Union{SemesterDate,Type{SemesterDate}}) = SemesterDate(252522163911149, 2)
+Base.typemin(::Union{SemesterDate,Type{SemesterDate}}) = SemesterDate(-252522163911150, 1)
+Base.typemax(::Union{QuarterDate,Type{QuarterDate}}) = QuarterDate(252522163911149, 4)
+Base.typemin(::Union{QuarterDate,Type{QuarterDate}}) = QuarterDate(-252522163911150, 1)
+Base.typemax(::Union{MonthDate,Type{MonthDate}}) = MonthDate(252522163911149, 12)
+Base.typemin(::Union{MonthDate,Type{MonthDate}}) = MonthDate(-252522163911150, 1)
+Base.typemax(::Union{WeekDate,Type{WeekDate}}) = WeekDate(2499, 52)
+Base.typemin(::Union{WeekDate,Type{WeekDate}}) = WeekDate(1, 1)
+Base.typemax(::Union{DayDate,Type{DayDate}}) = DayDate(252522163911149, 12, 31)
+Base.typemin(::Union{DayDate,Type{DayDate}}) = DayDate(-252522163911150, 1, 1)
+Base.typemax(::Union{UndatedDate,Type{UndatedDate}}) = UndatedDate(typemax(Int64))
+Base.typemin(::Union{UndatedDate,Type{UndatedDate}}) = UndatedDate(typemin(Int64))
 
 # Periods promotion, isless, ==
 Base.promote_rule(::Type{Dates.Year}, ::Type{Semester}) = Semester
@@ -386,7 +404,12 @@ Base.convert(::Type{Semester}, x::Dates.Quarter) = Dates.Quarter(divexact(value(
 
 # truncating conversions to milliseconds, nanoseconds and days:
 # overflow can happen for periods longer than ~300,000 years
+days(c::Year) = Dates.days(c)
 days(c::Semester) = 182.62125 * value(c)
+days(c::Quarter) = Dates.days(c)
+days(c::Month) = Dates.days(c)
+days(c::Week) = Dates.days(c)
+days(c::Day) = Dates.days(c)
 
 """
     islongyear(y)
@@ -430,6 +453,10 @@ function weeksinyear(y::Integer)
     islongyear(y) ? 53 : 52
 end
 
+function weeksinyears(y1::Integer, y2::Integer)
+    return sum(weeksinyear, y1:y2)
+end
+
 """
     numberofweeks(y, w)
 
@@ -446,4 +473,8 @@ julia> islongyear(2021)
 """
 function numberofweeks(y::Integer, w::Integer)
     sum(weeksinyear.(1:(y-1))) + w
+end
+
+function get_thursday(w::WeekDate)
+    return 7 * (value(w) - 1) + 4
 end

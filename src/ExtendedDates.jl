@@ -44,8 +44,8 @@ using Printf: @sprintf
 using Base.Iterators
 using Dates
 
-include("periods.jl")
 include("types.jl")
+include("periods.jl")
 include("accessors.jl")
 include("query.jl")
 include("arithmetic.jl")
@@ -179,7 +179,17 @@ export Period,
 
 # ExtendDates exported names
 export Semester,
-    Undated, YearDate, SemesterDate, QuarterDate, MonthDate, WeekDate, DayDate, UndatedDate
+    Undated,
+    YearDate,
+    SemesterDate,
+    QuarterDate,
+    MonthDate,
+    WeekDate,
+    DayDate,
+    UndatedDate,
+    semester,
+    quarter,
+    undated
 
 
 

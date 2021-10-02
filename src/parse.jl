@@ -2,9 +2,10 @@
 
 ### Parsing utilities
 
-_directives(::Type{PeriodFormat{S,T}}) where {S,T} = T.parameters
+_directives(::Type{SimpleDateFormat{S,T}}) where {S,T} = T.parameters
 
-character_codes(df::Type{PeriodFormat{S,T}}) where {S,T} = character_codes(_directives(df))
+character_codes(df::Type{SimpleDateFormat{S,T}}) where {S,T} =
+    character_codes(_directives(df))
 function character_codes(directives::Core.SimpleVector)
     letters = sizehint!(Char[], length(directives))
     for (i, directive) in enumerate(directives)
@@ -17,18 +18,19 @@ function character_codes(directives::Core.SimpleVector)
 end
 
 genvar(t::Type{T}) where {T<:SimpleDate} = Symbol(lowercase(string(nameof(t))))
+genvar(t::DataType) = Symbol(lowercase(string(nameof(t))))
 
 """
-    tryparsenext_core(str::AbstractString, pos::Int, len::Int, pf::PeriodFormat, raise=false)
+    tryparsenext_core(str::AbstractString, pos::Int, len::Int, pf::SimpleDateFormat, raise=false)
 
-Parse the string according to the directives within the `PeriodFormat`. Parsing will start at
+Parse the string according to the directives within the `SimpleDateFormat`. Parsing will start at
 character index `pos` and will stop when all directives are used or we have parsed up to
 the end of the string, `len`. When a directive cannot be parsed the returned value
 will be `nothing` if `raise` is false otherwise an exception will be thrown.
 
 If successful, return a 3-element tuple `(values, pos, num_parsed)`:
 * `values::Tuple`: A tuple which contains a value
-  for each `DatePart` within the `PeriodFormat` in the order
+  for each `PeriodPart` within the `SimpleDateFormat` in the order
   in which they occur. If the string ends before we finish parsing all the directives
   the missing values will be filled in with default values.
 * `pos::Int`: The character index at which parsing stopped.
@@ -39,7 +41,7 @@ If successful, return a 3-element tuple `(values, pos, num_parsed)`:
     str::AbstractString,
     pos::Int,
     len::Int,
-    pf::PeriodFormat,
+    pf::SimpleDateFormat,
     raise::Bool = false,
 )
     directives = _directives(pf)
@@ -61,7 +63,7 @@ If successful, return a 3-element tuple `(values, pos, num_parsed)`:
     vi = 1
     parsers = Expr[]
     for i = 1:length(directives)
-        if directives[i] <: DatePart
+        if directives[i] <: PeriodPart
             name = value_names[vi]
             vi += 1
             push!(parsers, quote
@@ -84,7 +86,6 @@ If successful, return a 3-element tuple `(values, pos, num_parsed)`:
             end)
         end
     end
-
     return quote
         directives = pf.tokens
 
@@ -117,10 +118,10 @@ If successful, return a 3-element tuple `(values, pos, num_parsed)`:
 end
 
 """
-    tryparsenext_internal(::Type{<:TimeType}, str, pos, len, pf::PeriodFormat, raise=false)
+    tryparsenext_internal(::Type{<:TimeType}, str, pos, len, pf::SimpleDateFormat, raise=false)
 
-Parse the string according to the directives within the `PeriodFormat`. The specified `TimeType`
-type determines the type of and order of tokens returned. If the given `PeriodFormat` or string
+Parse the string according to the directives within the `SimpleDateFormat`. The specified `TimeType`
+type determines the type of and order of tokens returned. If the given `SimpleDateFormat` or string
 does not provide a required token a default value will be used. When the string cannot be
 parsed the returned value will be `nothing` if `raise` is false otherwise an exception will
 be thrown.
@@ -135,7 +136,7 @@ If successful, returns a 2-element tuple `(values, pos)`:
     str::AbstractString,
     pos::Int,
     len::Int,
-    pf::PeriodFormat,
+    pf::SimpleDateFormat,
     raise::Bool = false,
 ) where {T<:SimpleDate}
     letters = character_codes(pf)
@@ -218,7 +219,7 @@ end
 function Base.parse(
     ::Type{T},
     str::AbstractString,
-    pf::PeriodFormat = default_format(T),
+    pf::SimpleDateFormat = default_format(T),
 ) where {T<:SimpleDate}
     pos, len = firstindex(str), lastindex(str)
     val = tryparsenext_internal(T, str, pos, len, pf, true)
@@ -228,7 +229,7 @@ function Base.parse(
 end
 
 #=
-function Base.tryparse(::Type{T}, str::AbstractString, pf::PeriodFormat=default_format(T)) where T<:TimeType
+function Base.tryparse(::Type{T}, str::AbstractString, pf::SimpleDateFormat=default_format(T)) where T<:TimeType
     pos, len = firstindex(str), lastindex(str)
     res = tryparsenext_internal(T, str, pos, len, pf, false)
     res === nothing && return nothing
@@ -242,14 +243,14 @@ end
 =#
 
 """
-    parse_components(str::AbstractString, pf::PeriodFormat) -> Array{Any}
+    parse_components(str::AbstractString, pf::SimpleDateFormat) -> Array{Any}
 
-Parse the string into its components according to the directives in the `PeriodFormat`.
+Parse the string into its components according to the directives in the `SimpleDateFormat`.
 Each component will be a distinct type, typically a subtype of Period. The order of the
-components will match the order of the `DatePart` directives within the `PeriodFormat`. The
-number of components may be less than the total number of `DatePart`.
+components will match the order of the `PeriodPart` directives within the `SimpleDateFormat`. The
+number of components may be less than the total number of `PeriodPart`.
 """
-@generated function parse_components(str::AbstractString, pf::PeriodFormat)
+@generated function parse_components(str::AbstractString, pf::SimpleDateFormat)
     letters = character_codes(pf)
     tokens = Type[CONVERSION_SPECIFIERS[letter] for letter in letters]
 

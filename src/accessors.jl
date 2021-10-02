@@ -4,19 +4,30 @@
 
 # Accessor functions
 value(sp::SimpleDate) = sp.instant.periods.value
+value(p::Period) = p.value
+function days(q::QuarterDate)
+    y1, q1 = divrem(value(q), 4)
+    m1 = 3 * q1
+    return value(DayDate(y1, m1, daysinmonth(m1)))
+end
+function days(m::MonthDate)
+    y1, m1 = divrem(value(m), 12)
+    return value(DayDate(y1, m1, daysinmonth(m1)))
+end
+days(w::WeekDate) = 7 * value(w)
 days(d::DayDate) = value(d)
 weeks(w::WeekDate) = value(w)
 months(m::MonthDate) = value(m)
 quarters(q::QuarterDate) = value(q)
 semesters(s::SemesterDate) = value(s)
 year(y::YearDate) = value(y) + 1
-year(s::SemesterDate) = div(value(s), 2) + 1
-year(q::QuarterDate) = div(value(q), 4) + 1
-year(m::MonthDate) = div(value(m), 12) + 1
+year(s::SemesterDate) = div(value(s) - 1, 2) + 1
+year(q::QuarterDate) = div(value(q) - 1, 4) + 1
+year(m::MonthDate) = div(value(m) - 1, 12) + 1
 year(w::WeekDate) = Dates.year((value(w) * 7))
 year(d::DayDate) = Dates.year(value(d))
 semester(s::SemesterDate) = rem(abs(value(s)) - 1, 2) + 1
-semester(q::QuarterDate) = rem(abs(value(q)), 2) + 1
+semester(q::QuarterDate) = rem(abs(value(q)) - 1, 2) + 1
 semester(m::MonthDate) = div(rem(abs(value(m)) - 1, 12), 2) + 1
 semester(d::DayDate) = semester(value(d))
 quarter(q::QuarterDate) = rem(abs(value(q)) - 1, 4) + 1
@@ -49,11 +60,11 @@ end
 week(d) = Dates.week(d)
 day(d) = Dates.day(d)
 
-dayofmonth(dt::Dates.TimeType) = day(dt)
+dayofmonth(dt::DayDate) = day(dt)
 
-yearmonth(dt::Dates.TimeType) = yearmonth(days(dt))
-monthday(dt::Dates.TimeType) = monthday(days(dt))
-yearmonthday(dt::Dates.TimeType) = yearmonthday(days(dt))
+yearmonth(dt::DayDate) = Dates.yearmonth(days(dt))
+monthday(dt::DayDate) = Dates.monthday(days(dt))
+yearmonthday(dt::DayDate) = Dates.yearmonthday(days(dt))
 
 # Documentation for exported accessors
 for func in (:year, :month, :quarter)

@@ -22,7 +22,7 @@ function tryparsenext end
 
 
 # Information for parsing and formatting date time values.
-struct PeriodFormat{S,T<:Tuple}
+struct SimpleDateFormat{S,T<:Tuple}
     tokens::T
 end
 
@@ -162,41 +162,47 @@ abstract type DayOfWeekToken end # special addition to Period types
 # Map conversion specifiers or character codes to tokens.
 # Note: Allow addition of new character codes added by packages
 const CONVERSION_SPECIFIERS = Dict{Char,Type}(
-    'y' => Dates.Year,
+    'y' => Year,
     's' => Semester,
-    'q' => Dates.Quarter,
-    'm' => Dates.Month,
-    'u' => Dates.Month,
-    'U' => Dates.Month,
-    'w' => Dates.Week,
-    'd' => Dates.Day,
+    'q' => Quarter,
+    'm' => Month,
+    'u' => Month,
+    'U' => Month,
+    'w' => Week,
+    'd' => Day,
 )
 
 # Default values are needed when a conversion specifier is used in a DateFormat for parsing
 # and we have reached the end of the input string.
 # Note: Allow `Any` value as a default to support extensibility
 const CONVERSION_DEFAULTS = IdDict{Type,Any}(
-    Dates.Year => Int64(1),
+    Year => Int64(1),
     Semester => Int64(1),
-    Dates.Quarter => Int64(1),
-    Dates.Month => Int64(1),
-    Dates.Week => Int64(0),
-    Dates.Day => Int64(1),
+    Quarter => Int64(1),
+    Month => Int64(1),
+    Week => Int64(0),
+    Day => Int64(1),
 )
 
 # Specifies the required fields in order to parse a TimeType
 # Note: Allows for addition of new TimeTypes
 const CONVERSION_TRANSLATIONS = IdDict{Type,Any}(
-    Dates.Year => (Dates.Year),
-    Semester => (Dates.Year, Semester),
-    Dates.Quarter => (Dates.Year, Dates.Quarter),
-    Dates.Month => (Dates.Year, Dates.Month),
-    Dates.Week => (Dates.Year, Dates.Week),
-    Dates.Day => (Dates.Year, Dates.Month, Dates.Day),
+    Year => (Year,),
+    Semester => (Year, Semester),
+    Quarter => (Year, Quarter),
+    Month => (Year, Month),
+    Week => (Year, Week),
+    Day => (Year, Month, Day),
+    YearDate => (Year,),
+    SemesterDate => (Year, Semester),
+    QuarterDate => (Year, Quarter),
+    MonthDate => (Year, Month),
+    WeekDate => (Year, Week),
+    DayDate => (Year, Month, Day),
 )
 
 """
-    PeriodFormat(format::AbstractString) -> PeriodFormat
+    SimpleDateFormat(format::AbstractString) -> SimpleDateFormat
 
 Construct a period formatting object that can be used for parsing period strings or
 formatting a period object as a string. The following character codes can be used to construct the `format`
@@ -219,15 +225,15 @@ For example a `dt` string of "1996-Q1" would have a `format` string like
 "y-Qq". If you need to use a code character as a delimiter you can escape it using
 backslash. The date "1995y01m" would have the format "y\\ym\\m".
 
-Creating a PeriodFormat object is expensive. Whenever possible, create it once and use it many times
-or try the [`periodformat""`](@ref @periodformat_str) string macro. Using this macro creates the PeriodFormat
+Creating a SimpleDateFormat object is expensive. Whenever possible, create it once and use it many times
+or try the [`periodformat""`](@ref @periodformat_str) string macro. Using this macro creates the SimpleDateFormat
 object once at macro expansion time and reuses it later. There are also several [pre-defined formatters](@ref
 Common-Period-Formatters), listed later.
 
 See [`DateTime`](@ref) and [`format`](@ref) for how to use a DateFormat object to parse and write Date strings
 respectively.
 """
-function PeriodFormat(f::AbstractString)
+function SimpleDateFormat(f::AbstractString)
     tokens = AbstractPeriodToken[]
     prev = ()
     prev_offset = 1
@@ -268,10 +274,10 @@ function PeriodFormat(f::AbstractString)
     end
 
     tokens_tuple = (tokens...,)
-    return PeriodFormat{Symbol(f),typeof(tokens_tuple)}(tokens_tuple)
+    return SimpleDateFormat{Symbol(f),typeof(tokens_tuple)}(tokens_tuple)
 end
 
-function Base.show(io::IO, pf::PeriodFormat)
+function Base.show(io::IO, pf::SimpleDateFormat)
     print(io, "periodformat\"")
     for t in pf.tokens
         _show_content(io, t)
@@ -279,18 +285,18 @@ function Base.show(io::IO, pf::PeriodFormat)
     print(io, '"')
 end
 
-Base.Broadcast.broadcastable(x::PeriodFormat) = Ref(x)
+Base.Broadcast.broadcastable(x::SimpleDateFormat) = Ref(x)
 
 """
     periodformat"Y-m-d"
 
-Create a [`PeriodFormat`](@ref) object. Similar to `PeriodFormat("Y-m-d")`
+Create a [`SimpleDateFormat`](@ref) object. Similar to `SimpleDateFormat("Y-m-d")`
 but creates the DateFormat object once during macro expansion.
 
-See [`PeriodFormat`](@ref) for details about format specifiers.
+See [`SimpleDateFormat`](@ref) for details about format specifiers.
 """
 macro periodformat_str(str)
-    PeriodFormat(str)
+    SimpleDateFormat(str)
 end
 
 default_format(::Type{Year}) = YearFormat
@@ -312,7 +318,7 @@ julia> Periods.format(Periods(2018, Year), YearFormat )
 "2018"
 ```
 """
-const YearFormat = PeriodFormat("yyyy")
+const YearFormat = SimpleDateFormat("yyyy")
 """
     Periods.SemesterFormat
 
@@ -322,7 +328,7 @@ julia> Periods.format(Periods(2018, 1, Semester), SemesterFormat )
 "2018-S1"
 ```
 """
-const SemesterFormat = PeriodFormat("yyyy-Ss")
+const SemesterFormat = SimpleDateFormat("yyyy-Ss")
 """
     Periods.QuarterFormat
 
@@ -332,7 +338,7 @@ julia> Periods.format(Periods(2018, 2, Quarter), QuarterFormat )
 "2018-Q2"
 ```
 """
-const QuarterFormat = PeriodFormat("yyyy-Qq")
+const QuarterFormat = SimpleDateFormat("yyyy-Qq")
 """
     Periods.MonthFormat
 
@@ -342,7 +348,7 @@ julia> Periods.format(Periods(2018, 3, Month), MonthFormat )
 "2018-03"
 ```
 """
-const MonthFormat = PeriodFormat("yyyy-mm")
+const MonthFormat = SimpleDateFormat("yyyy-mm")
 """
     Periods.WeekFormat
 
@@ -352,7 +358,7 @@ julia> Periods.format(Periods(2018, 4, Week), WeekFormat )
 "2018-W04"
 ```
 """
-const WeekFormat = PeriodFormat("yyyy-Www")
+const WeekFormat = SimpleDateFormat("yyyy-Www")
 """
     Periods.DayFormat
 
@@ -362,56 +368,69 @@ julia> Periods.format(Periods(2018, 3, 11, Day), DayFormat )
 "2018-03-11"
 ```
 """
-const DayFormat = PeriodFormat("yyyy-mm-dd")
+const DayFormat = SimpleDateFormat("yyyy-mm-dd")
 
 ### API
 
 
 """
-    Period(p::AbstractString, format::AbstractString) -> Period
+    SimpleDate(p::AbstractString, format::AbstractString) -> SimpleDate
 
-Construct a `Period` by parsing the `p` period string following the pattern given
-in the `format` string (see [`PeriodFormat`](@ref) for syntax).
+Construct a `SimpleDate` by parsing the `p` period string following the pattern given
+in the `format` string (see [`SimpleDateFormat`](@ref) for syntax).
 
 !!! note
-    This method creates a `PeriodFormat` object each time it is called. It is recommended
-    that you create a [`PeriodFormat`](@ref) object instead and use that as the second
+    This method creates a `SimpleDateFormat` object each time it is called. It is recommended
+    that you create a [`SimpleDateFormat`](@ref) object instead and use that as the second
     argument to avoid performance loss when using the same format repeatedly.
 
 # Example
 ```jldoctest
-julia> Period("2020-01-01", "yyyy-mm-dd")
+julia> SimpleDate("2020-01-01", "yyyy-mm-dd")
 2020-01-01
 
 julia> a = ("2020-01-01", "2020-01-02");
 
-julia> [Period(p, dateformat"yyyy-mm-dd") for p ∈ a] # preferred
-2-element Vector{Period}:
+julia> [SimpleDate(p, dateformat"yyyy-mm-dd") for p ∈ a] # preferred
+2-element Vector{SimpleDate}:
  2020-01-01
  2020-01-02
 ```
 """
-function Period(p::AbstractString, format::AbstractString)
-    parse(Period, d, PeriodFormat(format))
+function SimpleDate(p::AbstractString, format::AbstractString)
+    parse(SimpleDate, p, SimpleDateFormat(format))
+end
+
+for TP in (:Year, :Semester, :Quarter, :Month, :Week, :Day, :Undated)
+    sd = Symbol(TP, "Date")
+    sf = Symbol(TP, "Format")
+    @eval begin
+        function $sd(p::AbstractString, format::AbstractString)
+            parse($sd, p, SimpleDateFormat(format))
+        end
+
+        function $sd(p::AbstractString)
+            parse($sd, p, $sf)
+        end
+    end
 end
 
 """
-    Period(p::AbstractString, pf::PeriodFormat) -> Period
+    SimpleDate(p::AbstractString, pf::SimpleDateFormat) -> SimpleDate
 
-Construct a `Period` by parsing the `p` period string following the
-pattern given in the [`PeriodFormat`](@ref) object.
+Construct a `SimpleDate` by parsing the `p` period string following the
+pattern given in the [`SimpleDateFormat`](@ref) object.
 
-Similar to `Period(::AbstractString, ::AbstractString)` but more efficient when
+Similar to `SimpleDate(::AbstractString, ::AbstractString)` but more efficient when
 repeatedly parsing similarly formatted period strings with a pre-created
-`PeriodFormat` object.
+`SimpleDateFormat` object.
 """
-Period(p::AbstractString, pf::PeriodFormat) = parse(Period, p, pf)
-
+SimpleDate(p::AbstractString, pf::SimpleDateFormat) = parse(SimpleDate, p, pf)
 
 for TP in
     (:YearDate, :SemesterDate, :QuarterDate, :MonthDate, :WeekDate, :DayDate, :UndatedDate)
     @eval begin
-        @generated function format(io::IO, p::$TP, fmt::PeriodFormat{<:Any,T}) where {T}
+        @generated function format(io::IO, p::$TP, fmt::SimpleDateFormat{<:Any,T}) where {T}
             N = fieldcount(T)
             quote
                 ts = fmt.tokens
@@ -419,7 +438,7 @@ for TP in
             end
         end
 
-        function format(p::$TP, fmt::PeriodFormat, bufsize = 10)
+        function format(p::$TP, fmt::SimpleDateFormat, bufsize = 10)
             # preallocate to reduce resizing
             io = IOBuffer(Vector{UInt8}(undef, bufsize), read = true, write = true)
             format(io, p, fmt)
@@ -430,9 +449,9 @@ end
 
 
 """
-    format(p::Period, format::AbstractString) -> AbstractString
+    format(p::SimpleDate, format::AbstractString) -> AbstractString
 
-Construct a string by using a `Period` object and applying the provided `format`. The
+Construct a string by using a `SimpleDate` object and applying the provided `format`. The
 following character codes can be used to construct the `format` string:
 
 | Code       | Examples  | Comment                                                      |
@@ -461,39 +480,49 @@ backslash. The string "1996y01m" can be produced with the format "yyyy\\ymm\\m".
 
 # show
 function Base.print(io::IO, y::YearDate)
-    format(p, YearFormat, 4)
+    format(io, y, YearFormat)
 end
 
 function Base.print(io::IO, s::SemesterDate)
-    format(s, SemesterFormat, 7)
+    format(io, s, SemesterFormat)
 end
 
 function Base.print(io::IO, q::QuarterDate)
-    format(q, QuarterFormat, 6)
+    format(io, q, QuarterFormat)
 end
 
 function Base.print(io::IO, m::MonthDate)
-    format(m, MonthFormat, 7)
+    format(io, m, MonthFormat)
 end
 
 function Base.print(io::IO, w::WeekDate)
-    format(w, WeekFormat, 7)
+    format(io, w, WeekFormat)
 end
 
 #function Base.print(io::IO, d::DayDate)
-#    format(d, DayFormat, 10)
+#    format(io, d, DayFormat)
 #end
 
 function Base.print(io::IO, u::UndatedDate)
-    format(p, UndatedFormat, 1)
+    format(io, p, UndatedFormat)
 end
 
 function Base.print(io::IO, dd::DayDate)
     # don't use format - bypassing IOBuffer creation
     # saves a bit of time here.
-    y, m, d = yearmonthday(value(dd))
+    y, m, d = yearmonthday(dd)
     yy = y < 0 ? @sprintf("%05i", y) : lpad(y, 4, "0")
     mm = lpad(m, 2, "0")
     dd = lpad(d, 2, "0")
     print(io, "$yy-$mm-$dd")
+end
+
+for date_type in
+    (:Date, :DayDate, :WeekDate, :MonthDate, :QuarterDate, :SemesterDate, :YearDate)
+    # Human readable output (i.e. "2012-01-01")
+    @eval Base.show(io::IO, ::MIME"text/plain", dt::$date_type) = print(io, dt)
+    # Parsable output (i.e. Date("2012-01-01"))
+    @eval Base.show(io::IO, dt::$date_type) = print(io, typeof(dt), "(\"", dt, "\")")
+    # Parsable output will have type info displayed, thus it is implied
+    @eval Base.typeinfo_implicit(::Type{$date_type}) = true
 end

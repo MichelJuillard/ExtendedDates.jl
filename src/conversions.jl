@@ -2,7 +2,8 @@
 
 # Conversion/Promotion
 
-for T in (:Day, :Week, :Month, :Quarter, :Semester, :Year, :Undated)
+for T in
+    (:DayDate, :WeekDate, :MonthDate, :QuarterDate, :SemesterDate, :YearDate, :UndatedDate)
     @eval begin
         $T(dt::Dates.TimeType) = convert($T, dt)
     end
