@@ -679,12 +679,14 @@ end
     end
 end
 
-@testset "Diff of dates" begin
-    for t ∈ [Day, Week, Hour, Minute]
-        a = DateTime(2021, 1, 1):t(1):DateTime(2021, 2, 1)
-        d = diff(a)
-        @test d == diff(collect(a))
-        @test eltype(d) === typeof(a[1] - a[2])
+if VERSION >= v"1.7.0"
+    @testset "Diff of dates" begin
+        for t ∈ [Day, Week, Hour, Minute]
+            a = DateTime(2021, 1, 1):t(1):DateTime(2021, 2, 1)
+            d = diff(a)
+            @test d == diff(collect(a))
+            @test eltype(d) === typeof(a[1] - a[2])
+        end
     end
 end
 

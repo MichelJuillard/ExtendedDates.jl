@@ -248,8 +248,10 @@ end
     # compound periods should avoid automatically converting period types
     @test sprint(show, y + m) == string(y + m)
     @test convert(Dates.CompoundPeriod, y) + m == y + m
-    @test Dates.periods(convert(Dates.CompoundPeriod, y)) ==
-          convert(Dates.CompoundPeriod, y).periods
+    if VERSION >= v"1.7"
+        @test Dates.periods(convert(Dates.CompoundPeriod, y)) ==
+            convert(Dates.CompoundPeriod, y).periods
+    end
 end
 @testset "compound period simplification" begin
     # reduce compound periods into the most basic form
@@ -347,8 +349,10 @@ end
     @test (25m + 1y < 2y) == false
 end
 
-@testset "Convert CompoundPeriod to Period" begin
-    @test convert(Month, Year(1) + Month(1)) === Month(13)
+if VERSION >= v"1.7"
+    @testset "Convert CompoundPeriod to Period" begin
+        @test convert(Month, Year(1) + Month(1)) === Month(13)
+    end
 end
 
 end

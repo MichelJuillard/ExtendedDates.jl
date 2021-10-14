@@ -216,7 +216,7 @@ end
 
 # Dates are physical units, and ranges should require an explicit step.
 # See #19896 and https://discourse.julialang.org/t/type-restriction-on-unitrange/6557/12
-if VERSION >= v"1.0.0"
+if VERSION >= v"1.7.0"
     @test_throws MethodError DayDate(2013, 1, 1):DayDate(2013, 2, 1)
 end
 
@@ -412,8 +412,10 @@ end
 @test length(Year(1):Year(1):Year(10)) == 10
 @test length(Year(10):Year(-1):Year(1)) == 10
 @test length(Year(10):Year(-2):Year(1)) == 5
-@test length(typemin(Year):Year(1):typemax(Year)) == 0 # overflow
-@test_throws MethodError DayDate(0):DayDate(2000)
+if VERSION >= v"1.7.0"
+    @test length(typemin(Year):Year(1):typemax(Year)) == 0 # overflow
+    @test_throws MethodError DayDate(0):DayDate(2000)
+end
 @test_throws MethodError DayDate(0):Year(10)
 @test length(range(DayDate(2000), step = Day(1), length = 366)) == 366
 @test last(range(DayDate(2000), step = Day(1), length = 366)) == DayDate(2000, 12, 31)
