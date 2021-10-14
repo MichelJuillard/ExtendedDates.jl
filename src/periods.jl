@@ -157,6 +157,14 @@ end
 Base.convert(::Type{Semester}, x::Month) = Semester(divexact(value(x), 6))
 Base.promote_rule(::Type{Semester}, ::Type{Month}) = Month
 
+Base.convert(::Type{Year}, x::Int64) = Year(x)
+Base.convert(::Type{Semester}, x::Int64) = Semester(x)
+Base.convert(::Type{Quarter}, x::Int64) = Quarter(x)
+Base.convert(::Type{Month}, x::Int64) = Month(x)
+Base.convert(::Type{Week}, x::Int64) = Week(x)
+Base.convert(::Type{Day}, x::Int64) = Day(x)
+Base.convert(::Type{Undated}, x::Int64) = Undated(x)
+
 const zero_or_fixedperiod_seed = UInt === UInt64 ? 0x5b7fc751bba97516 : 0xeae0fdcb
 const nonzero_otherperiod_seed = UInt === UInt64 ? 0xe1837356ff2d2ac9 : 0x170d1b00
 otherperiod_seed(x::OtherPeriod) =

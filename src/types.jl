@@ -14,7 +14,7 @@ value(d::Undated) = d.value
 
 abstract type SimpleDate <: Dates.TimeType end
 
-SIMPLEPERIODS = (:Year, :Semester, :Quarter, :Month, :Week, :Day, :Undated)
+SIMPLEDATES = (:Year, :Semester, :Quarter, :Month, :Week, :Day, :Undated)
 
 # weeks computations
 function week_per_year()
@@ -72,6 +72,25 @@ for (T1, T2) in ((:Semester, :SemesterDate), (:Undated, :UndatedDate))
     end
 end
 
+# frequency traits
+abstract type Frequency end
+struct FYear <: Frequency; end
+struct FSemester <: Frequency; end
+struct FQuarter <: Frequency; end
+struct FMonth <: Frequency; end
+struct FWeek <: Frequency; end
+struct FDay <: Frequency; end
+struct FUndated <: Frequency; end
+    
+
+simpleperiod(::Type{FYear}, y::Int64) = YearDate(y)
+simpleperiod(::Type{FSemester}, y::Int64, s::Int64) = SemesterDate(y, s)
+simpleperiod(::Type{FQuarter}, y::Int64, q::Int64) = QuarterDate(y, q)
+simpleperiod(::Type{FMonth}, y::Int64, m::Int64) = MonthDate(y, m)
+simpleperiod(::Type{FWeek}, y::Int64, w::Int64) = WeekDate(y, w)
+simpleperiod(::Type{FDay}, y::Int64, m::Int64, d::Int64) = DayDate(y, m, d)
+simpleperiod(::Type{FUndated}, u::Int64) = UndatedDate(u)
+    
 DAYMULTIPLEDATE = Union{DayDate,WeekDate}
 DAYMULTIPLEPERIOD = Union{Day,Week}
 MONTHMULTIPLEDATE = Union{MonthDate,QuarterDate,SemesterDate,YearDate}

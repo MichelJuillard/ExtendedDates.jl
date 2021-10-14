@@ -411,4 +411,14 @@ end
 
 end
 
+@testset "simpleperiod" begin
+    @test ExtendedDates.simpleperiod(FYear, 2000) == YearDate(2000)
+    @test ExtendedDates.simpleperiod(FSemester, 2000, 2) == SemesterDate(2000, 2)
+    @test ExtendedDates.simpleperiod(FQuarter, 2000, 4) == QuarterDate(2000, 4)
+    @test ExtendedDates.simpleperiod(FMonth, 2000, 11) == MonthDate(2000, 11)
+    @test ExtendedDates.simpleperiod(FWeek, 2000, 52) == WeekDate(2000, 52)
+    @test ExtendedDates.simpleperiod(FDay, 2004, 2, 29) == DayDate(2004, 2, 29)
+    @test ExtendedDates.simpleperiod(FUndated, 2000) == UndatedDate(2000)
+end
+
 end

@@ -526,3 +526,40 @@ for date_type in
     # Parsable output will have type info displayed, thus it is implied
     @eval Base.typeinfo_implicit(::Type{$date_type}) = true
 end
+
+function simpleperiod(s::String) SimpleDate
+    p = nothing
+    try
+        parts = split(s, '-')
+        y = Base.parse(Int64, parts[1])
+        if length(parts) == 1
+            p = YearDate(y)
+        elseif length(parts) == 2
+            f = parts[2][1]
+            if f == 'S'
+                s = Base.parse(Int64, parts[2][2:end])
+                p = SemesterDate(y, s)
+            elseif f == 'Q'
+                s = Base.parse(Int64, parts[2][2:end])
+                p = QuarterDate(y, s)
+            elseif f == 'W'
+                s = Base.parse(Int64, parts[2][2:end])
+                p = WeekDate(y, s)
+            else
+                s = Base.parse(Int64, parts[2])
+                p = MonthDate(y, s)
+            end
+        elseif length(parts) == 3
+            m = Base.parse(Int64, parts[2])
+            d = Base.parse(Int64, parts[3])
+            p = DayDate(y, m, d)
+        else
+            error("Can't parse $s")
+        end
+    catch
+        error("Can't parse $s")
+    end
+    return p
+end
+
+simpleperiod(u::Int64) = UndatedDate(u)
