@@ -45,8 +45,8 @@ end
 Base.length(r::StepRange{<:SimpleDate}) =
     isempty(r) ? Int64(0) : len(r.start, r.stop, r.step) + 1
 # Period ranges hook into Int64 overflow detection
-Base.length(r::StepRange{<:Dates.Period}) =
-    length(StepRange(value(r.start), value(r.step), value(r.stop)))
+#Base.length(r::StepRange{<:Dates.Period}) =
+#    length(StepRange(value(r.start), value(r.step), value(r.stop)))
 
 # Overload Base.steprange_last because `rem` is not overloaded for `TimeType`s
 function Base.steprange_last(start::T, step, stop) where {T<:SimpleDate}
@@ -84,12 +84,16 @@ Base.iterate(r::StepRange{<:SimpleDate}) =
 Base.iterate(r::StepRange{<:SimpleDate}, (l, i)) =
     l <= i ? nothing : (r.start + r.step * i, (l, i + 1))
 
-+(x::Period, r::AbstractRange{<:SimpleDate}) = (x+first(r)):step(r):(x+last(r))
-+(r::AbstractRange{<:SimpleDate}, x::Period) = x + r
--(r::AbstractRange{<:SimpleDate}, x::Period) = (first(r)-x):step(r):(last(r)-x)
-*(x::Period, r::AbstractRange{<:Real}) = (x*first(r)):(x*step(r)):(x*last(r))
-*(r::AbstractRange{<:Real}, x::Period) = x * r
-/(r::AbstractRange{<:P}, x::P) where {P<:Period} = (first(r)/x):(step(r)/x):(last(r)/x)
+for p in (:Semester, :Undated)
+    @eval begin
+        +(x::$p, r::AbstractRange{<:SimpleDate}) = (x+first(r)):step(r):(x+last(r))
+        +(r::AbstractRange{<:SimpleDate}, x::$p) = x + r
+        -(r::AbstractRange{<:SimpleDate}, x::$p) = (first(r)-x):step(r):(last(r)-x)
+        *(x::$p, r::AbstractRange{<:Real}) = (x*first(r)):(x*step(r)):(x*last(r))
+        *(r::AbstractRange{<:Real}, x::$p) = x * r
+        /(r::AbstractRange{<:P}, x::P) where {P<:$p} = (first(r)/x):(step(r)/x):(last(r)/x)
+    end
+end
 
 # Combinations of types and periods for which the range step is regular
 Base.RangeStepStyle(::Type{<:OrdinalRange{<:SimpleDate,<:Dates.FixedPeriod}}) =

@@ -518,7 +518,7 @@ function Base.print(io::IO, dd::DayDate)
 end
 
 for date_type in
-    (:Date, :DayDate, :WeekDate, :MonthDate, :QuarterDate, :SemesterDate, :YearDate)
+    (:DayDate, :WeekDate, :MonthDate, :QuarterDate, :SemesterDate, :YearDate)
     # Human readable output (i.e. "2012-01-01")
     @eval Base.show(io::IO, ::MIME"text/plain", dt::$date_type) = print(io, dt)
     # Parsable output (i.e. Date("2012-01-01"))

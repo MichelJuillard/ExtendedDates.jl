@@ -247,7 +247,7 @@ function (+)(d::DayDate, ds::Semester)
     return DayDate(y2, m2, (d1 > ld) ? ld : d1)
 end
 
-function (+)(dy::Year, y::DayDate)
+function (+)(dy::Semester, y::DayDate)
     return y + dy
 end
 
