@@ -8,10 +8,6 @@ for period in (:Year, :Semester, :Quarter, :Month, :Week, :Day)
     @eval _units(x::$period) = " " * $accessor_str * (abs(value(x)) == 1 ? "" : "s")
     # periodisless
     @eval periodisless(x::$period, y::$period) = value(x) < value(y)
-    # AbstractString parsing (mainly for IO code)
-    @eval $period(x::AbstractString) = $period(Base.parse(Int64, x))
-    # The period type is printed when output, thus it already implies its own typeinfo
-    @eval Base.typeinfo_implicit(::Type{$period}) = true
     # Period accessors
     typs = [:YearDate, :SemesterDate, :QuarterDate, :MonthDate, :WeekDate, :DayDate]
     reference =
@@ -36,21 +32,19 @@ for period in (:Year, :Semester, :Quarter, :Month, :Week, :Day)
     end
 end
 
-_units(y::Year) = " year" * (abs(value(y)) == 1 ? "" : "s")
-_units(s::Semester) = " semester" * (abs(value(s)) == 1 ? "" : "s")
-_units(q::Quarter) = " quarter" * (abs(value(q)) == 1 ? "" : "s")
-_units(m::Month) = " month" * (abs(value(m)) == 1 ? "" : "s")
-_units(w::Week) = " week" * (abs(value(w)) == 1 ? "" : "s")
-_units(d::Day) = " day" * (abs(value(d)) == 1 ? "" : "s")
+# AbstractString parsing (mainly for IO code)
+Semester(x::AbstractString) = Semester(Base.parse(Int64, x))
+Undated(x::AbstractString) = Undated(Base.parse(Int64, x))
+# The period type is printed when output, thus it already implies its own typeinfo
+Base.typeinfo_implicit(::Type{Semester}) = true
+Base.typeinfo_implicit(::Type{Undated}) = true
+
 _units(u::Undated) = ""
 
 #Print/show/traits
 Base.print(io::IO, x::Semester) = print(io, value(x), _units(x))
 Base.print(io::IO, x::Undated) = print(io, value(x), _units(x))
-Base.show(io::IO, ::MIME"text/plain", x::Period) = print(io, x)
-Base.show(io::IO, p::P) where {P<:Period} = print(io, P, '(', value(p), ')')
 
-days(c::Semester) = 182.62125 * value(c)
 # See https://en.wikipedia.org/wiki/ISO_week_date
 # There are 20871 weeks in 400 years
 weeks(c::Day) = div(value(c), 7)
@@ -102,76 +96,11 @@ function divexact(x, y)
     return q
 end
 
-# other periods with fixed conversions but which aren't fixed time periods
-const OtherPeriod = Union{Month,Quarter,Semester,Year}
-let vmax = typemax(Int64) ÷ 12, vmin = typemin(Int64) ÷ 12
-    @eval function Base.convert(::Type{Month}, x::Year)
-        $vmin ≤ value(x) ≤ $vmax || throw(InexactError(:convert, Month, x))
-        Month(value(x) * 12)
-    end
-end
-Base.convert(::Type{Year}, x::Month) = Year(divexact(value(x), 12))
-Base.promote_rule(::Type{Year}, ::Type{Month}) = Month
-
-let vmax = typemax(Int64) ÷ 4, vmin = typemin(Int64) ÷ 4
-    @eval function Base.convert(::Type{Quarter}, x::Year)
-        $vmin ≤ value(x) ≤ $vmax || throw(InexactError(:convert, Quarter, x))
-        Quarter(value(x) * 4)
-    end
-end
-Base.convert(::Type{Year}, x::Quarter) = Year(divexact(value(x), 4))
-Base.promote_rule(::Type{Year}, ::Type{Quarter}) = Quarter
-
-let vmax = typemax(Int64) ÷ 3, vmin = typemin(Int64) ÷ 3
-    @eval function Base.convert(::Type{Month}, x::Quarter)
-        $vmin ≤ value(x) ≤ $vmax || throw(InexactError(:convert, Month, x))
-        Month(value(x) * 3)
-    end
-end
-Base.convert(::Type{Quarter}, x::Month) = Quarter(divexact(value(x), 3))
-Base.promote_rule(::Type{Quarter}, ::Type{Month}) = Month
-
-let vmax = typemax(Int64) ÷ 2, vmin = typemin(Int64) ÷ 2
-    @eval function Base.convert(::Type{Semester}, x::Year)
-        $vmin ≤ value(x) ≤ $vmax || throw(InexactError(:convert, Semester, x))
-        Semester(value(x) * 2)
-    end
-end
-Base.convert(::Type{Year}, x::Semester) = Year(divexact(value(x), 2))
-Base.promote_rule(::Type{Year}, ::Type{Semester}) = Semester
-
-let vmax = typemax(Int64) ÷ 2, vmin = typemin(Int64) ÷ 2
-    @eval function Base.convert(::Type{Quarter}, x::Semester)
-        $vmin ≤ value(x) ≤ $vmax || throw(InexactError(:convert, Quarter, x))
-        Quarter(value(x) * 2)
-    end
-end
-Base.convert(::Type{Semester}, x::Quarter) = Semester(divexact(value(x), 2))
-Base.promote_rule(::Type{Semester}, ::Type{Quarter}) = Quarter
-
-let vmax = typemax(Int64) ÷ 6, vmin = typemin(Int64) ÷ 6
-    @eval function Base.convert(::Type{Month}, x::Semester)
-        $vmin ≤ value(x) ≤ $vmax || throw(InexactError(:convert, Month, x))
-        Month(value(x) * 6)
-    end
-end
-Base.convert(::Type{Semester}, x::Month) = Semester(divexact(value(x), 6))
-Base.promote_rule(::Type{Semester}, ::Type{Month}) = Month
-
-#Base.convert(::Type{Year}, x::Int64) = Year(x)
-#Base.convert(::Type{Semester}, x::Int64) = Semester(x)
-#Base.convert(::Type{Quarter}, x::Int64) = Quarter(x)
-#Base.convert(::Type{Month}, x::Int64) = Month(x)
-#Base.convert(::Type{Week}, x::Int64) = Week(x)
-#Base.convert(::Type{Day}, x::Int64) = Day(x)
-#Base.convert(::Type{Undated}, x::Int64) = Undated(x)
 
 const zero_or_fixedperiod_seed = UInt === UInt64 ? 0x5b7fc751bba97516 : 0xeae0fdcb
 const nonzero_otherperiod_seed = UInt === UInt64 ? 0xe1837356ff2d2ac9 : 0x170d1b00
 otherperiod_seed(x::OtherPeriod) =
     iszero(value(x)) ? zero_or_fixedperiod_seed : nonzero_otherperiod_seed
 
-Base.hash(x::Year, h::UInt) = hash(12 * value(x), h + otherperiod_seed(x))
 Base.hash(x::Semester, h::UInt) = hash(6 * value(x), h + otherperiod_seed(x))
-Base.hash(x::Quarter, h::UInt) = hash(3 * value(x), h + otherperiod_seed(x))
-Base.hash(x::Month, h::UInt) = hash(value(x), h + otherperiod_seed(x))
+
