@@ -38,6 +38,7 @@ month(d::DayDate) = month(value(d))
 week(w::WeekDate) = Dates.week(value(w) * 7)
 week(d::DayDate) = Dates.week(value(d))
 day(d::DayDate) = Dates.day(value(d))
+undated(u::UndatedDate) = value(u)
 
 # accessor functions for number of days
 year(d::Int64) = Dates.year(d)

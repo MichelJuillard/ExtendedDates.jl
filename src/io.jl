@@ -71,7 +71,7 @@ end
 
 ### Format tokens
 
-for (c, fn) in zip("ysqmwd", Any[year, semester, quarter, month, week, day])
+for (c, fn) in zip("ysqmwdx", Any[year, semester, quarter, month, week, day, undated])
     @eval function format(io, d::PeriodPart{$c}, p)
         print(io, string($fn(p), base = 10, pad = d.width))
     end
@@ -170,6 +170,7 @@ const CONVERSION_SPECIFIERS = Dict{Char,Type}(
     'U' => Month,
     'w' => Week,
     'd' => Day,
+    'x' => Undated,
 )
 
 # Default values are needed when a conversion specifier is used in a DateFormat for parsing
@@ -182,6 +183,7 @@ const CONVERSION_DEFAULTS = IdDict{Type,Any}(
     Month => Int64(1),
     Week => Int64(0),
     Day => Int64(1),
+    Undated => Int64(1),
 )
 
 # Specifies the required fields in order to parse a TimeType
@@ -199,6 +201,7 @@ const CONVERSION_TRANSLATIONS = IdDict{Type,Any}(
     MonthDate => (Year, Month),
     WeekDate => (Year, Week),
     DayDate => (Year, Month, Day),
+    UndatedDate => (Undated),
 )
 
 """
@@ -219,6 +222,7 @@ string:
 | `w`        | 1,..., 53 | Returns week 01 to 53                                        |
 | `d`        | 1, 01     | Matches 1 or 2-digit days                                    |
 | `yyyymmdd` | 19960101  | Matches fixed-width year, month, and day                     |
+| `x`        | 1, ...    | Matches undated period                                       |
 
 Characters not listed above are normally treated as delimiters between slots.
 For example a `dt` string of "1996-Q1" would have a `format` string like
@@ -318,7 +322,7 @@ julia> Periods.format(Periods(2018, Year), YearFormat )
 "2018"
 ```
 """
-const YearFormat = SimpleDateFormat("yyyy")
+const YearFormat = SimpleDateFormat("y")
 """
     Periods.SemesterFormat
 
@@ -328,7 +332,7 @@ julia> Periods.format(Periods(2018, 1, Semester), SemesterFormat )
 "2018-S1"
 ```
 """
-const SemesterFormat = SimpleDateFormat("yyyy-Ss")
+const SemesterFormat = SimpleDateFormat("y-Ss")
 """
     Periods.QuarterFormat
 
@@ -338,7 +342,7 @@ julia> Periods.format(Periods(2018, 2, Quarter), QuarterFormat )
 "2018-Q2"
 ```
 """
-const QuarterFormat = SimpleDateFormat("yyyy-Qq")
+const QuarterFormat = SimpleDateFormat("y-Qq")
 """
     Periods.MonthFormat
 
@@ -348,7 +352,7 @@ julia> Periods.format(Periods(2018, 3, Month), MonthFormat )
 "2018-03"
 ```
 """
-const MonthFormat = SimpleDateFormat("yyyy-mm")
+const MonthFormat = SimpleDateFormat("y-mm")
 """
     Periods.WeekFormat
 
@@ -358,7 +362,7 @@ julia> Periods.format(Periods(2018, 4, Week), WeekFormat )
 "2018-W04"
 ```
 """
-const WeekFormat = SimpleDateFormat("yyyy-Www")
+const WeekFormat = SimpleDateFormat("y-Www")
 """
     Periods.DayFormat
 
@@ -368,7 +372,17 @@ julia> Periods.format(Periods(2018, 3, 11, Day), DayFormat )
 "2018-03-11"
 ```
 """
-const DayFormat = SimpleDateFormat("yyyy-mm-dd")
+const DayFormat = SimpleDateFormat("y-mm-dd")
+"""
+    Periods.UndatedFormat
+
+# Example
+```jldoctest
+julia> Periods.format(Periods(11, Undated), DayFormat )
+"2018-03-11"
+```
+"""
+const UndatedFormat = SimpleDateFormat("x")
 
 ### API
 
@@ -504,7 +518,7 @@ end
 #end
 
 function Base.print(io::IO, u::UndatedDate)
-    format(io, p, UndatedFormat)
+    format(io, u, UndatedFormat)
 end
 
 function Base.print(io::IO, dd::DayDate)
