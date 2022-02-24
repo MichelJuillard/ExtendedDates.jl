@@ -50,7 +50,7 @@ end
 
 ### Parse tokens
 
-for c in "ysqmwd"
+for c in "ysqmwdx"
     @eval begin
         @inline function tryparsenext(d::PeriodPart{$c}, str, i, len)
             return tryparsenext_base10(str, i, len, min_width(d), max_width(d))
@@ -201,7 +201,7 @@ const CONVERSION_TRANSLATIONS = IdDict{Type,Any}(
     MonthDate => (Year, Month),
     WeekDate => (Year, Week),
     DayDate => (Year, Month, Day),
-    UndatedDate => (Undated),
+    UndatedDate => (Undated,),
 )
 
 """
@@ -303,13 +303,13 @@ macro periodformat_str(str)
     SimpleDateFormat(str)
 end
 
-default_format(::Type{Year}) = YearFormat
-default_format(::Type{Semester}) = SemesterFormat
-default_format(::Type{Quarter}) = QuarterFormat
-default_format(::Type{Month}) = MonthFormat
-default_format(::Type{Week}) = WeekFormat
-default_format(::Type{Day}) = DayFormat
-default_format(::Type{Undated}) = UndatedFormat
+default_format(::Type{YearDate}) = YearFormat
+default_format(::Type{SemesterDate}) = SemesterFormat
+default_format(::Type{QuarterDate}) = QuarterFormat
+default_format(::Type{MonthDate}) = MonthFormat
+default_format(::Type{WeekDate}) = WeekFormat
+default_format(::Type{DayDate}) = DayFormat
+default_format(::Type{UndatedDate}) = UndatedFormat
 
 # Standard formats
 
