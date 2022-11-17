@@ -30,8 +30,8 @@ version = "0.27.19"
 
 [[deps.ExtendedDates]]
 path = ".."
-uuid = "93a61fde-43d9-4edb-99bc-90b7d11dc23d"
-version = "0.0.0"
+uuid = "78f5a1cc-aa73-4dda-b6b2-4d6b1976988f"
+version = "0.2.0"
 
 [[deps.IOCapture]]
 deps = ["Logging", "Random"]
