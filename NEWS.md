@@ -1,3 +1,6 @@
+0.2.0
+=====
+- Total rewrite
 0.1.2
 =====
 - fix bug in parsing periods
