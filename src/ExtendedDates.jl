@@ -1,204 +1,157 @@
-# This file is a part of DynareJulia. License is GNU GPL v.3: https://www.gnu.org/licenses/. 
-
-"""
-    ExtendedDates
-
-The `ExtendedDates` module extends Julia `Dates` module by providing dates at different frequencies:
-YearDate`, `SemesterDate`, `QuarterDate`, `MonthDate`, `WeekDate`, `DayDate` and `UndatedDate` types.
-All of them use their own proleptic Gregorian calendar at corresponding frequency. This is primarily aimed
-at providing the time index of timeseries at various frequencies.
-
-`Dates.Period` types `Semester` and `Undated` are also provided.
-
-```jldoctest
-julia> y = YearDate(2017)
-2017
-
-julia> s = SemesterDate(2017, 2)
-2017-S2
-
-julia> q = QuarterDate(2017, 3)
-2017-Q3
-
-julia> m = MonthDate(2017, 10)
-2017-10
-
-julia> w = WeekDate(2017, 52)
-2017-W52
-
-julia> d = DayDate(2017, 9, 15)
-2017-09-15
-
-julia> u = UndatedDate(3)
-3
-
-```
-
-Please see the manual for more information.
-"""
 module ExtendedDates
 
-import Base: ==, div, fld, mod, rem, gcd, lcm, +, -, *, /, %, broadcast
-using Printf: @sprintf
+using Reexport
+@reexport using Dates
 
-using Base.Iterators
-using Dates
+import Base: +, -, isfinite, isless, <, <=, :, print, show, ==, hash, convert, promote_rule, one
+import Dates: Date, year, toms, days, _units, value, validargs
 
-include("types.jl")
-include("periods.jl")
-include("accessors.jl")
-include("query.jl")
-include("arithmetic.jl")
-include("conversions.jl")
-include("ranges.jl")
-include("adjusters.jl")
-include("rounding.jl")
+using Dates: UTInstant
+
+export period, frequency, subperiod, Undated,
+    parse_periods,
+    Semester, semesterofyear, dayofsemester, firstdayofsemester, lastdayofsemester,
+    DaySE, WeekSE, MonthSE, QuarterSE, SemesterSE, YearSE, PeriodSE,
+    PeriodsSinceEpoch
+
+include("Semesters.jl")
+
+const YearPeriod = Union{Month, Quarter, Semester, Year}
+
+const EPOCH = Date(1) # Monday, January 1, year 1
+
+# Constructors
+"""
+    period(::Type{<:Period}, year::Integer, subperiod::Integer = 1)
+
+Construct a period from a year, subperiod, and frequency.
+
+These periods are represented as an Int64 number of periods since an epoch defined by the
+[`ExtendedDates.epoch`](@ref) function. For most period types the epoch is Saturday,
+January 1, year 0. For week periods, it is Monday, January 3, year 0.
+
+```jldoctest
+julia> x = period(Semester, 2022, 1)
+2022-S1
+
+julia> Dates.format(x)
+"2022-S1"
+
+julia> Date(x)
+2022-01-01
+
+julia> Date(period(Week, 0))
+0000-01-03
+
+julia> Date(period(Day, 0))
+0000-01-01
+```
+"""
+period(::Type{P}, args...; kws...) where P <: Period = UTInstant{P}(args...; kws...)
+
+function UTInstant{P}(year::Integer, subperiod::Integer = 1) where P <: Period
+    err = validargs(P, year, subperiod)
+    err === nothing || throw(err)
+    return period(P, year, subperiod, nothing)
+end
+
+periodsinyear(P::Type{<:YearPeriod}) = Year(1) ÷ P(1)
+UTInstant{P}(year, subperiod, unchecked::Nothing) where P <: Period =
+    UTInstant(P(cld((Date(year) - EPOCH), P(1)) + subperiod))
+UTInstant{P}(year, subperiod, unchecked::Nothing) where P <: YearPeriod  =
+    UTInstant(P(periodsinyear(P) * (year - 1) + subperiod))
+UTInstant{Day}(year, month, day::Number) = UTInstant(Day(value(Date(year, month, day))))
+
+function validargs(P::Type{<:YearPeriod}, ::Int64, p::Int64)
+    0 < p <= periodsinyear(P) || return ArgumentError("$P: $p out of range (1:$(periodsinyear(P)))")
+    nothing
+end
+function validargs(::Type{Day}, y::Int64, p::Int64)
+    0 < p <= daysinyear(y) || return ArgumentError("$P: $p out of range (1:$(daysinyear(P))) for $y")
+    nothing
+end
+validargs(::Type{Day}, y::Int64, m::Int64, p::Int64) = validargs(Date, y, m, p)
+function validargs(P::Type{<:Period}, y::Int64, p::Int64) # TODO inefficient
+    year(Date(period(P, y, p, nothing))) == year(Date(period(P, y, 1, nothing))) || return ArgumentError("$P: $p out of range for $y")
+    nothing
+end
+
+# Conversion to Date to calculate year and subperiod
+Date(p::UTInstant{P}) where P <: Period = EPOCH + p.periods - frequency(p)
+
+# Fallback accessors for frequency, year, subperiod
+frequency(x) = oneunit(x)
+frequency(::UTInstant{P}) where P = P(1)
+frequency(::Type{UTInstant{P}}) where P = P(1)
+"""
+    year(::UTInstant{<:Period})
+
+The year of a period.
+
+```jldoctest
+julia> year(period(Day, 1960, 12))
+1960
+```
+"""
+year(p::UTInstant{<:Period}) = year(Date(p))
+"""
+    year(::UTInstant{<:Period})
+
+The subperiod of a period within a year. Numbering starts at one.
+
+```jldoctest
+julia> subperiod(period(Day, 1960, 12))
+12
+
+julia> Date(period(Day, 1960, 12))
+1960-01-12
+```
+"""
+subperiod(p::UTInstant{<:Period}) = fld((Date(p) - floor(Date(p), Year)), frequency(p)) + 1
+
+# Avoid conversion to Date for Year based periods
+year(p::UTInstant{<:YearPeriod}) = fld(p - oneunit(p), Year(1)) + year(EPOCH)
+subperiod(p::UTInstant{<:YearPeriod}) = (rem(p - oneunit(p), Year(1), RoundDown)) ÷ frequency(p) + 1
+
+#TODO move me:
+one(p::UTInstant{<:Period}) = one(p.periods)
+isless(a::UTInstant, b::UTInstant) = isless(a.periods-frequency(a), b.periods-frequency(b))
+<(a::UTInstant, b::UTInstant) = a.periods <= b.periods-frequency(b)
+==(a::UTInstant, b::UTInstant) = a.periods-frequency(a) == b.periods-frequency(b)
+<=(a::UTInstant, b::UTInstant) = !(b < a)
++(i::UTInstant{P}, p::P) where P <: Period = UTInstant(i.periods + p)
+-(i::UTInstant{P}, p::P) where P <: Period = UTInstant(i.periods - p)
+isfinite(i::UTInstant{P}) where P <: Period = isfinite(i.periods) # true
+
+value(p::UTInstant{P}) where P <: Period = value(p.periods)
+
+const DaySE = UTInstant{Day}
+const WeekSE = UTInstant{Week}
+const MonthSE = UTInstant{Month}
+const QuarterSE = UTInstant{Quarter}
+const SemesterSE = UTInstant{Semester}
+const YearSE = UTInstant{Year}
+const PeriodSE = UTInstant{<:Period}
+
+UTInstant{P}(s::AbstractString) where P <: Period = parse(UTInstant{P}, s)
+UTInstant(s::AbstractString) = parse(UTInstant, s)
+
+Base.print(io::IO, p::PeriodSE) = Dates.format(io, p)
+Base.show(io::IO, ::MIME"text/plain", p::PeriodSE) = print(io, p)
+Base.show(io::IO, p::UTInstant{P}) where P <: Period = print(io, P, "SE(\"", p, "\")")
+
+const PeriodsSinceEpoch = Union{PeriodSE, Int64} # TODO rename me
+# End TODO move me
+
+const Undated = Int64
+
+# Convenience function for range of periods
+(:)(start::UTInstant{P}, stop::UTInstant{P}) where P <: Period = start:frequency(P):stop
+
+# So that Day periods behave like Dates
+Dates.month(d::UTInstant{Day}) = month(Date(d))
+Dates.day(d::UTInstant{Day}) = day(Date(d))
+
 include("io.jl")
-include("parse.jl")
 
-# re-export all Dates names
-export Period,
-    DatePeriod,
-    TimePeriod,
-    Year,
-    Quarter,
-    Month,
-    Week,
-    Day,
-    Hour,
-    Minute,
-    Second,
-    Millisecond,
-    Microsecond,
-    Nanosecond,
-    TimeZone,
-    UTC,
-    TimeType,
-    DateTime,
-    Date,
-    Time,
-    # periods.jl
-    canonicalize,
-    # accessors.jl
-    yearmonthday,
-    yearmonth,
-    monthday,
-    year,
-    month,
-    week,
-    day,
-    hour,
-    minute,
-    second,
-    millisecond,
-    dayofmonth,
-    microsecond,
-    nanosecond,
-    # query.jl
-    dayofweek,
-    isleapyear,
-    daysinmonth,
-    daysinyear,
-    dayofyear,
-    dayname,
-    dayabbr,
-    dayofweekofmonth,
-    daysofweekinmonth,
-    monthname,
-    monthabbr,
-    quarterofyear,
-    dayofquarter,
-    Monday,
-    Tuesday,
-    Wednesday,
-    Thursday,
-    Friday,
-    Saturday,
-    Sunday,
-    Mon,
-    Tue,
-    Wed,
-    Thu,
-    Fri,
-    Sat,
-    Sun,
-    January,
-    February,
-    March,
-    April,
-    May,
-    June,
-    July,
-    August,
-    September,
-    October,
-    November,
-    December,
-    Jan,
-    Feb,
-    Mar,
-    Apr,
-    May,
-    Jun,
-    Jul,
-    Aug,
-    Sep,
-    Oct,
-    Nov,
-    Dec,
-    # conversions.jl
-    unix2datetime,
-    datetime2unix,
-    now,
-    today,
-    rata2datetime,
-    datetime2rata,
-    julian2datetime,
-    datetime2julian,
-    # adjusters.jl
-    firstdayofweek,
-    lastdayofweek,
-    firstdayofmonth,
-    lastdayofmonth,
-    firstdayofyear,
-    lastdayofyear,
-    firstdayofquarter,
-    lastdayofquarter,
-    adjust,
-    tonext,
-    toprev,
-    tofirst,
-    tolast,
-    # io.jl
-    ISODateTimeFormat,
-    ISODateFormat,
-    ISOTimeFormat,
-    DateFormat,
-    RFC1123Format,
-    @dateformat_str
-
-# ExtendDates exported names
-export Semester,
-    Undated,
-    YearDate,
-    SemesterDate,
-    QuarterDate,
-    MonthDate,
-    WeekDate,
-    DayDate,
-    UndatedDate,
-    semester,
-    quarter,
-    undated,
-    simpleperiod,
-    FYear,
-    FSemester,
-    FQuarter,
-    FMonth,
-    FWeek,
-    FDay,
-    FUndated
-
-
-
-end # module
+end

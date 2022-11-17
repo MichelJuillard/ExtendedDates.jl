@@ -1,11 +1,19 @@
 name = "ExtendedDates"
-uuid = "78f5a1cc-aa73-4dda-b6b2-4d6b1976988f"
-authors = ["MichelJuillard <michel.juillard@mjui.fr>"]
-version = "0.1.2"
+uuid = "93a61fde-43d9-4edb-99bc-90b7d11dc23d"
+authors = ["Lilith Hafner <Lilith.Hafner@gmail.com> and contributors"]
+version = "0.0.0"
 
 [deps]
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-julia = "1.6"
+Reexport = "1"
+julia = "1.8"
+
+[extras]
+InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["InteractiveUtils", "Test"]
