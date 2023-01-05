@@ -1,6 +1,6 @@
 0.2.0
 =====
-- Total rewrite
+- Total rewrite. Copied all content from https://github.com/LilithHafner/ExtendedDates.jl
 0.1.2
 =====
 - fix bug in parsing periods
