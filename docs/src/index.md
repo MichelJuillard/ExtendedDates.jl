@@ -4,7 +4,7 @@ CurrentModule = ExtendedDates
 
 # ExtendedDates
 
-Documentation for [ExtendedDates](https://github.com/LilithHafner/ExtendedDates.jl).
+Documentation for [ExtendedDates](https://github.com/DynareJulia/ExtendedDates.jl).
 
 ```@index
 ```
